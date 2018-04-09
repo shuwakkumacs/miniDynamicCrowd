@@ -1,0 +1,20 @@
+<!-- Caution:: DO NOT modify this file -->
+{% load static %}
+<html>
+<head>
+	<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'/>
+	<script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
+	<script type='text/javascript' src='{% static "nanotask/js/externalHIT_v1.js" %}'></script>
+</head>
+<body>
+	<div id="nanotask-wrapper" style="width:100%;"><!-- nanotask dynamically inserted here --></div>
+	<form name='mturk_form' method='post' id='mturk_form' action='https://www.mturk.com/mturk/externalSubmit'>
+	<input type='hidden' value='' name='assignmentId' id='assignmentId'/>
+	<input type='hidden' value='' id='nano-answers-all' />
+	<input type='hidden' value='' id='nano-ids-all' />
+	</form>
+</body>
+<script src="{% static "nanotask/js/base.js" %}"></script>
+
+<script>turkSetAssignmentID();</script>
+</html>
