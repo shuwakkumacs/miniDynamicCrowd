@@ -7,7 +7,8 @@ from django.db import transaction
 from .models import *
 import json
 
-# Create your views here.
+settings = json.load(open("/root/settings.json"))
+
 
 @csrf_exempt
 def create_project(request):
@@ -16,20 +17,38 @@ def create_project(request):
 	project.save()
 	return HttpResponse(None)
 
+
+@csrf_exempt
 def get_project(request, project_name):
 	project = Project.objects.filter(name=project_name).first()
 	return JsonResponse({"id": project.id, "name": project.name, "nanotasks_per_hit": project.nanotasks_per_hit})
 
+
 @csrf_exempt
 def load_base(request, project_name):
-	ret = render(request, "base.html")
+	context = {
+		"min_height": settings["AMT"]["FrameHeight"]
+	}
+	ret = render(request, "base.html", context=context)
 	return ret
+
+
+@csrf_exempt
+def load_preview_nanotask(request, project_name, mturk_worker_id):
+	template_path = "./{}/preview.html".format(project_name)
+	template = loader.get_template(template_path)
+	response = {
+		"info": {"id": None, "project_name": project_name, "template_name": "__preview__" },
+		"html": template.render({}, request)
+	} 
+	return JsonResponse(response)
+
 
 @csrf_exempt
 def load_nanotask(request, project_name, mturk_worker_id):
 	# FIXME:: obviously not optimal or scaling
 	reserved_nanotask = Nanotask.objects.raw("SELECT * FROM nanotask INNER JOIN answers ON nanotask.id=answers.nanotask_id WHERE nanotask.id NOT IN (SELECT nanotask_id FROM answers WHERE mturk_worker_id!='{}');".format(mturk_worker_id))
-	# TODO:: what to do with reservation --- like reloading the page or coming back to the task later?
+	# TODO:: what to do with reservation --- like when reloading the page or coming back to the task later?
 	#reserved_nanotask = Nanotask.objects.filter(answer__mturk_worker_id=mturk_worker_id).first()
 	#if reserved_nanotask:
 	#	nanotask = reserved_nanotask
@@ -54,6 +73,7 @@ def load_nanotask(request, project_name, mturk_worker_id):
 	else:
 		ret = JsonResponse({"info": None, "html": None}) 
 	return ret
+
 
 @csrf_exempt
 def create_nanotasks(request):

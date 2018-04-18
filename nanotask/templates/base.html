@@ -2,12 +2,21 @@
 {% load static %}
 <html>
 <head>
+	<link rel="stylesheet" href="{% static "nanotask/css/base.css" %}"></script>
 	<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'/>
 	<script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
 	<script type='text/javascript' src='{% static "nanotask/js/externalHIT_v1.js" %}'></script>
 </head>
 <body>
-	<div id="nanotask-wrapper" style="width:100%;"><!-- nanotask dynamically inserted here --></div>
+	<div id="base-instruction-shadow">
+		<div id="base-instruction"></div>
+	</div>
+	<center>
+		<div id="base-title">Test Title</div>
+		<button id="base-instruction-button">See instructions</button>
+		<div id="base-submitted-num-box"><span id="submitted-num"></span> / <span id="nanotasks-per-hit"></span></div>
+	</center>
+	<div id="base-nanotask-wrapper" style="min-height:{{ min_height }}px;"><!-- nanotask dynamically inserted here --></div>
 	<form name='mturk_form' method='post' id='mturk_form' action='https://www.mturk.com/mturk/externalSubmit'>
 	<input type='hidden' value='' name='assignmentId' id='assignmentId'/>
 	<input type='hidden' value='' id='nano-answers-all' />
