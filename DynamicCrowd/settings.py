@@ -32,7 +32,7 @@ SECRET_KEY = 'ta8%shp5d*496$&@8qrcg(xatmgi$=7@^=w&$79bnp*6ef)ivg'
 DEBUG = True
 
 ALLOWED_HOSTS = [
-	"test.r9n.net",
+	".r9n.net",
 	"localhost"
 ]
 
