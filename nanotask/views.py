@@ -3,6 +3,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.template import loader
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.clickjacking import xframe_options_exempt
 from django.db import transaction
 from .models import *
 import json
@@ -24,10 +25,11 @@ def get_project(request, project_name):
 	return JsonResponse({"id": project.id, "name": project.name, "nanotasks_per_hit": project.nanotasks_per_hit})
 
 
-@csrf_exempt
+@xframe_options_exempt
 def load_base(request, project_name):
 	context = {
-		"min_height": settings["AMT"]["FrameHeight"]
+		"min_height": settings["AMT"]["FrameHeight"],
+		"base_url": settings["BaseUrl"]
 	}
 	ret = render(request, "base.html", context=context)
 	return ret

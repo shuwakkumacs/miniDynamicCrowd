@@ -15,4 +15,5 @@ def run(context):
 			     + '</ExternalQuestion>'
 	num_unsolved_answers = Answer.objects.filter(mturk_worker_id=None).count()
 	num_hits = -(-num_unsolved_answers//context.settings["DynamicCrowd"]["NanotasksPerHIT"]) # ceiling division
-	print(num_hits)
+	print("{} HITs posted!".format(num_hits))
+	client.create_hit(**params)
