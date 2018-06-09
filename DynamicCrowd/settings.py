@@ -87,10 +87,11 @@ WSGI_APPLICATION = 'DynamicCrowd.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-				"HOST": "127.0.0.1",
-				"USER": "root",
-				"PASSWORD": "admin",
-				"NAME": "nanotask"
+        "HOST": "172.17.0.1",
+        "PORT": 13306,
+        "USER": "",
+        "PASSWORD": "",
+        "NAME": ""
     }
 }
 

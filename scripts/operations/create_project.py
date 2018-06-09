@@ -1,4 +1,2 @@
-
 def run(context):
-        project = context.new_project()
-        project.save()
+        context.create_project()

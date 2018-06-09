@@ -49,7 +49,7 @@ def load_preview_nanotask(request, project_name, mturk_worker_id):
 @csrf_exempt
 def load_nanotask(request, project_name, mturk_worker_id):
 	# FIXME:: obviously not optimal or scaling
-	reserved_nanotask = Nanotask.objects.raw("SELECT * FROM nanotask INNER JOIN answers ON nanotask.id=answers.nanotask_id WHERE nanotask.id NOT IN (SELECT nanotask_id FROM answers WHERE mturk_worker_id!='{}');".format(mturk_worker_id))
+	reserved_nanotask = Nanotask.objects.raw("SELECT * FROM nanotask INNER JOIN answers ON nanotask.id=answers.nanotask_id WHERE nanotask.id NOT IN (SELECT nanotask_id FROM answers WHERE mturk_worker_id!='{}') AND nanotask.project_name='{}';".format(mturk_worker_id,project_name))
 	# TODO:: what to do with reservation --- like when reloading the page or coming back to the task later?
 	#reserved_nanotask = Nanotask.objects.filter(answer__mturk_worker_id=mturk_worker_id).first()
 	#if reserved_nanotask:
