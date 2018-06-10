@@ -3,7 +3,10 @@ import csv
 import sys
 
 def run(context):
-    template_name = sys.argv[3]
+    context.parser.add_argument("template_name", help="Template name")
+    args = context.parser.parse_args()
+    template_name = args.template_name
+
     with open("./scripts/nanotask_csv/{}/{}.csv".format(context.project_name,template_name)) as f:
         reader = csv.reader(f, delimiter=",", quotechar="'")
         columns = next(reader)

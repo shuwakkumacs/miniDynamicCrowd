@@ -9,6 +9,7 @@ import json
 import requests
 import concurrent.futures
 import boto3
+import argparse
 sys.path.append(".")
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'DynamicCrowd.settings')
 django.setup()
@@ -21,14 +22,18 @@ from tqdm import tqdm
 class Context:
 
     def __init__(self, setting):
+        self.parser = argparse.ArgumentParser()
+        self.parser.add_argument("operation", help="DynamicCrowd operation (put \"operations.\" before operation name)")
+        self.parser.add_argument("project_name", help="Project name")
+        self.operation = sys.argv[1]
+        self.project_name = sys.argv[2]
+
         with open(setting) as f:
             self.settings = json.load(f)
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=5)
-        self.operation = sys.argv[1]
-        self.project_name = sys.argv[2]
     
-    def get_mturk_client(self):
-        if self.settings["AMT"]["Sandbox"]:
+    def get_mturk_client(self, is_sandbox):
+        if is_sandbox:
             endpoint_url = "https://mturk-requester-sandbox.us-east-1.amazonaws.com"
         else:
             endpoint_url = "https://mturk-requester.us-east-1.amazonaws.com"
@@ -40,48 +45,14 @@ class Context:
                     endpoint_url = endpoint_url
         )
     
-    def create_project(self):
-        # not needed for now
-        #
-        #project = Project.objects.filter(name=self.project_name).first()
-        #if project:
-        #    print("ERROR: project {} already exists".format(self.project_name))
-        #else:
-        #    project = Project(name=self.project_name, nanotasks_per_hit=self.settings["DynamicCrowd"]["AnswersPerNanotask"])
-        #    project.save()
-            
-        path1 = "nanotask/templates/{}".format(self.project_name)
-        if not os.path.exists(path1):
-            os.makedirs(path1)
-            open("{}/preview.html".format(path1),"a").close()
-        else:
-            print("CAUTION: skipped creating directory {} because it already exists.".format(path1))
-    
-        path2 = "scripts/nanotask_csv/{}".format(self.project_name)
-        if not os.path.exists(path2):
-            os.makedirs(path2)
-        else:
-            print("CAUTION: skipped creating directory {} because it already exists.".format(path2))
-
-    def create_template(self, template_name):
-        path1 = "nanotask/templates/{}".format(self.project_name)
-        if os.path.exists(path1):
-            open("{}/{}.html".format(path1,template_name),"a").close()
-        else:
-            print("ERROR: project directory {} does not exist.".format(path1))
-    
-        path2 = "scripts/nanotask_csv/{}".format(self.project_name)
-        if os.path.exists(path2):
-            open("{}/{}.csv".format(path2,template_name),"a").close()
-        else:
-            print("ERROR: project directory {} does not exist.".format(path2))
-    
     def save_nanotasks(self, template_name, generator, total=0):
+        with open("/root/DynamicCrowd/settings/projects/{}.json".format(self.project_name)) as f:
+            settings = json.load(f)
         with transaction.atomic():
             for row in tqdm(generator, total=total):
                 nanotask = Nanotask(project_name=self.project_name, template_name=template_name, media_data=json.dumps(row))
                 nanotask.save()
-                for i in range(self.settings["DynamicCrowd"]["AnswersPerNanotask"]):
+                for i in range(settings["DynamicCrowd"]["AnswersPerNanotask"]):
                     answer = Answer(nanotask=nanotask)
                     answer.save()
 
@@ -90,7 +61,7 @@ class Context:
             callback(model_to_dict(row), model_to_dict(row.nanotask))
 
 def main():
-    context = Context("/root/settings.json")
+    context = Context("/root/DynamicCrowd/settings/global.json")
     mod = __import__(context.operation, fromlist=["run"])
     run = getattr(mod,"run")
     run(context)
