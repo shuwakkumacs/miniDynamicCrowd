@@ -18,8 +18,17 @@ def run(context):
     path2 = "scripts/nanotask_csv/{}".format(context.project_name)
     create_directory(path2)
 
-    path3 = "settings/projects/{}.json".format(context.project_name)
-    create_file(path3, settings_body)
+    path3 = "settings/projects" #{}.json".format(context.project_name)
+    if not os.path.exists(path3):
+        create_directory(path3)
+    create_file("{}/{}.json".format(path3,context.project_name), settings_body)
+
+def directory_exists(dirpath):
+    if os.path.exists(dirpath):
+        return True
+    else:
+        print("ERROR: project directory {} does not exist.".format(dirpath))
+        return False
 
 def create_directory(dirpath):
     if not os.path.exists(dirpath):
