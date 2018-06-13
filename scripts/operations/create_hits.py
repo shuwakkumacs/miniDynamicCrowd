@@ -11,7 +11,7 @@ def run(context):
     args = context.parser.parse_args()
     is_sandbox = args.production
     
-    with open("/root/DynamicCrowd/settings/project/{}.json".format(context.project_name)) as f:
+    with open("/root/DynamicCrowd/settings/projects/{}.json".format(context.project_name)) as f:
         project_settings = json.load(f)
     
     client = context.get_mturk_client(is_sandbox)
