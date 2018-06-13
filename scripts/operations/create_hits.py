@@ -7,7 +7,7 @@ from nanotask.models import *
 from django.db import transaction
 
 def run(context):
-    context.parser.add_argument("--production", help="Production mode (non-sandbox)", action="store_true")
+    context.parser.add_argument("--production", help="Production mode (non-sandbox)", action="store_false")
     args = context.parser.parse_args()
     is_sandbox = args.production
     
