@@ -146,7 +146,6 @@ $(function(){
         $("#base-instruction-button").click();
     } else { 
         $("#base-submitted-num-box").show();
-        $("#base-submitted-num-box>span.nanotasks-per-hit").text(nanotasksPerHIT);
         loadNanotask();
     }
 });
