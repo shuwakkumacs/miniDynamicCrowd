@@ -13,6 +13,8 @@ BASE_URL = window.location.origin+"/";
 nanotasksPerHIT = -1;
 submittedNanotasks = 0;
 
+timeNanotaskStarted = null;
+
 //var getProject = function(success, error){
 //    $.ajax({
 //        type: "GET",
@@ -27,7 +29,7 @@ var loadPreviewNanotask = function() {
         type: "GET",
         url: BASE_URL + "nanotask/nanotask/"+PROJECT_NAME+"/"+MTURK_WORKER_ID+"/preview/",
         success: function(nanotask){
-            $("#base-nanotask-wrapper").html(nanotask.html);
+            $("#base-nanotask").html(nanotask.html);
         }
     });
 };
@@ -36,20 +38,25 @@ var loadNanotask = function() {
     var afterNanotaskLoadHandler = function(nanotask){
         if(!nanotask.info) afterNanotaskLoadErrorHandler();
         $("#base-submitted-num-box>span.submitted-num").text(submittedNanotasks+1);
-        $("#base-nanotask-wrapper").html(nanotask.html);
-        $("#base-nanotask-wrapper").fadeIn("normal");
+        $("#base-nanotask").html(nanotask.html);
+        $("#base-nanotask").fadeIn("normal");
+        timeNanotaskStarted = new Date();
         var idsAllInputVal = $("#nano-ids-all").val();
         var answersAllInputVal = $("#nano-answers-all").val();
+        var secsAllInputVal = $("#nano-secs-all").val();
         if(idsAllInputVal=="") {
             idsAll = [];
+            secsAll = [];
             answersAll = [];
         } else {
             idsAll = JSON.parse(idsAllInputVal);
+            secsAll = JSON.parse(secsAllInputVal);
             answersAll = JSON.parse(answersAllInputVal);
         }
     
         $(".nano-submit").on("click", function(){
-            $("#base-nanotask-wrapper").fadeOut("fast");
+            var secsElapsed = (new Date() - timeNanotaskStarted)/1000;
+            $("#base-nanotask").fadeOut("fast");
             var answersJSON = {};
 
             if($(this).attr("name")){
@@ -57,7 +64,7 @@ var loadNanotask = function() {
                 var value = $(this).val();
                 answersJSON[name] = value;
             } else {
-                $answers = $(".nano-answer");
+                $answers = $(".nano-answer:checked");
                 for(var i in $answers){
                     var $answer = $answers.eq(i);
                     var name = $answer.attr("name");
@@ -66,8 +73,10 @@ var loadNanotask = function() {
                 }
             }
             idsAll.push(nanotask.info.id);
+            secsAll.push(secsElapsed);
             answersAll.push(answersJSON);
             $("#nano-ids-all").val(JSON.stringify(idsAll));
+            $("#nano-secs-all").val(JSON.stringify(secsAll));
             $("#nano-answers-all").val(JSON.stringify(answersAll));
             submittedNanotasks += 1;
 
@@ -94,13 +103,14 @@ var loadNanotask = function() {
 };
 
 var submitHIT = function(){
-    $("#base-nanotask-wrapper").html('<p style="width:100%;margin-top:100px;text-align:center;font-size:1.5em;">Submitting HIT...</p>');
+    $("#base-nanotask-submitted").show();
     $.ajax({
         type: "POST",
         url: BASE_URL + "nanotask/answers/save/"+MTURK_WORKER_ID+"/",
         dataType: "json",
         data: JSON.stringify({
             "ids": JSON.parse($("#nano-ids-all").val()),
+            "secs": JSON.parse($("#nano-secs-all").val()),
             "answers": JSON.parse($("#nano-answers-all").val())
         }),
         success: function(){

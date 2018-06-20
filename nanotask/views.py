@@ -5,6 +5,7 @@ from django.template import loader
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.db import transaction
+from django.utils import timezone
 from .models import *
 import json
 
@@ -62,6 +63,7 @@ def load_nanotask(request, project_name, mturk_worker_id):
         if nanotask:
             answer = Answer.objects.filter(nanotask_id=nanotask.id, mturk_worker_id=None).first()
             answer.mturk_worker_id = mturk_worker_id
+            answer.time_assigned = timezone.now()
             answer.save()
 
     if nanotask:
@@ -88,12 +90,15 @@ def save_answers(request, mturk_worker_id):
     print(request.body)
     request_json = json.loads(request.body)
     ids = request_json["ids"]
+    secs = request_json["secs"]
     answers = request_json["answers"]
 
     with transaction.atomic():
         for i,id in enumerate(ids):
             answer = Answer.objects.filter(nanotask_id=id,mturk_worker_id=mturk_worker_id).first()
             answer.value = json.dumps(answers[i])
+            answer.time_submitted = timezone.now()
+            answer.secs_elapsed = secs[i]
             answer.save()
 
     return JsonResponse({})
