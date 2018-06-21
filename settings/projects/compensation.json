@@ -1,0 +1,20 @@
+{
+	"AMT": {
+		"FrameHeight": 600,
+		"HITParams": {
+			"MaxAssignments": 1,
+			"LifetimeInSeconds": 360000,
+			"AutoApprovalDelayInSeconds": 1,
+			"AssignmentDurationInSeconds": 36000,
+			"Reward": "0.00",
+			"Title": "Compensation HIT",
+			"Keywords": "this, is, a, test, HIT",
+			"Description": "This is a HIT for compensating our notified workers. Please avoid accepting this HIT unless you get an invitation from us."
+		}
+	},
+	"DynamicCrowd": {
+        "Title": "Compensation HIT (notified workers only)",
+		"NanotasksPerHIT": 1,
+		"AnswersPerNanotask": 1
+	}
+}

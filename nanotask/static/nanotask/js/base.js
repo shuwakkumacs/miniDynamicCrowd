@@ -7,22 +7,12 @@ MTURK_HIT_ID = turkGetParam("hitId", null);
 
 TEST_MODE = MTURK_ASSIGNMENT_ID=="test" ? true : false;
 
-//BASE_URL = "http://localhost/DynamicCrowd/";
 BASE_URL = window.location.origin+"/";
 
 nanotasksPerHIT = -1;
 submittedNanotasks = 0;
 
 timeNanotaskStarted = null;
-
-//var getProject = function(success, error){
-//    $.ajax({
-//        type: "GET",
-//        url: BASE_URL + "nanotask/project/"+PROJECT_NAME+"/",
-//        success: success,
-//        error: error
-//    });
-//};
 
 var loadPreviewNanotask = function() {
     $.ajax({
@@ -106,12 +96,15 @@ var submitHIT = function(){
     $("#base-nanotask-submitted").show();
     $.ajax({
         type: "POST",
-        url: BASE_URL + "nanotask/answers/save/"+MTURK_WORKER_ID+"/",
+        url: BASE_URL + "nanotask/answers/save/",
         dataType: "json",
         data: JSON.stringify({
             "ids": JSON.parse($("#nano-ids-all").val()),
             "secs": JSON.parse($("#nano-secs-all").val()),
-            "answers": JSON.parse($("#nano-answers-all").val())
+            "answers": JSON.parse($("#nano-answers-all").val()),
+            "mturk_assignment_id": MTURK_ASSIGNMENT_ID,
+            "mturk_hit_id": MTURK_HIT_ID,
+            "mturk_worker_id": MTURK_WORKER_ID
         }),
         success: function(){
             if(TEST_MODE) { setTimeout(function(){ window.location.reload(); }, 500); }

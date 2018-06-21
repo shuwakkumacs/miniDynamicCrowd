@@ -18,12 +18,6 @@ def create_project(request):
     return HttpResponse(None)
 
 
-#@csrf_exempt
-#def get_project(request, project_name):
-#    project = Project.objects.filter(name=project_name).first()
-#    return JsonResponse({"id": project.id, "name": project.name, "nanotasks_per_hit": project.nanotasks_per_hit})
-
-
 @xframe_options_exempt
 def load_base(request, project_name):
     project_settings = json.load(open("/root/DynamicCrowd/settings/projects/{}.json".format(project_name)))
@@ -86,19 +80,23 @@ def create_nanotasks(request):
     pass
 
 @csrf_exempt
-def save_answers(request, mturk_worker_id):
-    print(request.body)
+def save_answers(request):
     request_json = json.loads(request.body)
     ids = request_json["ids"]
     secs = request_json["secs"]
     answers = request_json["answers"]
 
     with transaction.atomic():
+        amt_assignment = AMTAssignment(mturk_assignment_id=request_json["mturk_assignment_id"],
+                                       mturk_hit_id=request_json["mturk_hit_id"],
+                                       mturk_worker_id=request_json["mturk_worker_id"])
+        amt_assignment.save()
         for i,id in enumerate(ids):
-            answer = Answer.objects.filter(nanotask_id=id,mturk_worker_id=mturk_worker_id).first()
+            answer = Answer.objects.filter(nanotask_id=id,mturk_worker_id=request_json["mturk_worker_id"]).first()
             answer.value = json.dumps(answers[i])
             answer.time_submitted = timezone.now()
             answer.secs_elapsed = secs[i]
+            answer.amt_assignment = amt_assignment
             answer.save()
 
     return JsonResponse({})
