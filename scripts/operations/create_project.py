@@ -15,7 +15,7 @@ def run(context):
         create_file("{}/preview.html".format(path1), preview_body)
         create_file("{}/instruction.html".format(path1), instruction_body)
     
-    path2 = "scripts/nanotask_csv/{}".format(context.project_name)
+    path2 = "scripts/csv/{}".format(context.project_name)
     create_directory(path2)
 
     path3 = "settings/projects" #{}.json".format(context.project_name)

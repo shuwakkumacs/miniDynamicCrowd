@@ -1,5 +1,4 @@
 import json
-import requests
 import concurrent.futures
 import boto3
 
@@ -25,6 +24,13 @@ def run(context):
     num_unsolved_answers = Answer.objects.filter(mturk_worker_id=None).count()
     num_hits = -(-num_unsolved_answers//project_settings["DynamicCrowd"]["NanotasksPerHIT"]) # ceiling division
     print("{} HITs posted!".format(num_hits))
-    client.create_hit(**params)
     for i in range(num_hits):
-        executor.submit(client.create_hit,**params)
+        #executor.submit(create_hit,client,params)
+        create_hit(client,context.project_name,is_sandbox,params)
+
+def create_hit(client,project_name,is_sandbox,params):
+    ret = client.create_hit(**params)
+    mturk_hit_id = ret["HIT"]["HITId"]
+    hit = HIT(mturk_hit_id=mturk_hit_id,project_name=project_name,is_sandbox=is_sandbox)
+    hit.save()
+    print(mturk_hit_id)

@@ -8,13 +8,13 @@
 			"AssignmentDurationInSeconds": 36000,
 			"Reward": "0.00",
 			"Title": "Compensation HIT",
-			"Keywords": "this, is, a, test, HIT",
+			"Keywords": "compensation",
 			"Description": "This is a HIT for compensating our notified workers. Please avoid accepting this HIT unless you get an invitation from us."
 		}
 	},
 	"DynamicCrowd": {
         "Title": "Compensation HIT (notified workers only)",
 		"NanotasksPerHIT": 1,
-		"AnswersPerNanotask": 1
+		"AnswersPerNanotask": 50
 	}
 }

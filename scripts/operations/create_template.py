@@ -8,9 +8,9 @@ def run(context):
     if directory_exists(path1):
         create_file("{}/{}.html".format(path1,template_name),template_body)
 
-    path2 = "scripts/nanotask_csv/{}".format(context.project_name)
+    path2 = "scripts/csv/{}".format(context.project_name)
     if directory_exists(path2):
-        create_file("{}/{}.csv".format(path2,template_name),csv_body)
+        create_file("{}/{}_nanotasks.csv".format(path2,template_name),csv_body)
 
 def directory_exists(dirpath):
     if os.path.exists(dirpath):
