@@ -54,7 +54,7 @@ var loadNanotask = function() {
                 var value = $(this).val();
                 answersJSON[name] = value;
             } else {
-                $answers = $(".nano-answer:checked");
+                $answers = $(".nano-answer[type=radio]:checked,.nano-answer[type=text]");
                 for(var i in $answers){
                     var $answer = $answers.eq(i);
                     var name = $answer.attr("name");
