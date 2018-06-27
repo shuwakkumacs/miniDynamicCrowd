@@ -13,7 +13,7 @@ class AMTAssignment(models.Model):
 class HIT(models.Model):
     mturk_hit_id = models.CharField(max_length=255, null=True, default=None)
     project_name = models.CharField(max_length=255, null=True, default=None)
-    is_sandbox = models.IntegerField(max_length=1, null=False)
+    is_sandbox = models.IntegerField(null=False)
     time_created = models.DateTimeField(auto_now_add=True, blank=True)
     time_expired = models.DateTimeField(null=True)
 

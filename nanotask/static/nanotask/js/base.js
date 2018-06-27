@@ -32,16 +32,16 @@ var loadNanotask = function() {
         $("#base-nanotask").fadeIn("normal");
         timeNanotaskStarted = new Date();
         var idsAllInputVal = $("#nano-ids-all").val();
-        var answersAllInputVal = $("#nano-answers-all").val();
-        var secsAllInputVal = $("#nano-secs-all").val();
+        //var answersAllInputVal = $("#nano-answers-all").val();
+        //var secsAllInputVal = $("#nano-secs-all").val();
         if(idsAllInputVal=="") {
             idsAll = [];
-            secsAll = [];
-            answersAll = [];
+        //    secsAll = [];
+        //    answersAll = [];
         } else {
             idsAll = JSON.parse(idsAllInputVal);
-            secsAll = JSON.parse(secsAllInputVal);
-            answersAll = JSON.parse(answersAllInputVal);
+        //    secsAll = JSON.parse(secsAllInputVal);
+        //    answersAll = JSON.parse(answersAllInputVal);
         }
     
         $(".nano-submit").on("click", function(){
@@ -63,15 +63,23 @@ var loadNanotask = function() {
                 }
             }
             idsAll.push(nanotask.info.id);
-            secsAll.push(secsElapsed);
-            answersAll.push(answersJSON);
+            //secsAll.push(secsElapsed);
+            //answersAll.push(answersJSON);
             $("#nano-ids-all").val(JSON.stringify(idsAll));
-            $("#nano-secs-all").val(JSON.stringify(secsAll));
-            $("#nano-answers-all").val(JSON.stringify(answersAll));
+            //$("#nano-secs-all").val(JSON.stringify(secsAll));
+            //$("#nano-answers-all").val(JSON.stringify(answersAll));
             submittedNanotasks += 1;
-
-            if(submittedNanotasks >= nanotasksPerHIT) submitHIT();
-            else loadNanotask(nanotask.info.project_name);
+            data = {
+                "id": nanotask.info.id,
+                "sec": secsElapsed,
+                "answer": answersJSON
+            };
+            submitNanotask(data, function(){
+                if(submittedNanotasks >= nanotasksPerHIT) submitHIT();
+                else loadNanotask();
+            }, function(){
+                alert("We're sorry, an error occured on sending data --- we would appreciate if you could kindly report this. Thank you very much.");
+            });
         });
     };
     
@@ -89,23 +97,18 @@ var loadNanotask = function() {
         success: afterNanotaskLoadHandler,
         error: afterNanotaskLoadErrorHandler
     });
-
 };
 
 var submitHIT = function(){
+    data["mturk_assignment_id"] = MTURK_ASSIGNMENT_ID;
+    data["mturk_worker_id"] = MTURK_WORKER_ID;
+    data["mturk_hit_id"] = MTURK_HIT_ID;
+    data["ids"] = JSON.parse($("#nano-ids-all").val());
     $("#base-nanotask-submitted").show();
     $.ajax({
         type: "POST",
-        url: BASE_URL + "nanotask/answers/save/",
-        dataType: "json",
-        data: JSON.stringify({
-            "ids": JSON.parse($("#nano-ids-all").val()),
-            "secs": JSON.parse($("#nano-secs-all").val()),
-            "answers": JSON.parse($("#nano-answers-all").val()),
-            "mturk_assignment_id": MTURK_ASSIGNMENT_ID,
-            "mturk_hit_id": MTURK_HIT_ID,
-            "mturk_worker_id": MTURK_WORKER_ID
-        }),
+        url: BASE_URL + "nanotask/assignment/save/",
+        data: JSON.stringify(data),
         success: function(){
             if(TEST_MODE) { setTimeout(function(){ window.location.reload(); }, 500); }
             else $("#mturk_form").submit();
@@ -115,6 +118,18 @@ var submitHIT = function(){
         }
     });
 };
+
+var submitNanotask = function(data, success, error){
+    data["mturk_worker_id"] = MTURK_WORKER_ID;
+    $.ajax({
+        type: "POST",
+        url: BASE_URL + "nanotask/answer/save/",
+        dataType: "json",
+        data: JSON.stringify(data),
+        success: success,
+        error: error
+    });
+}
 
 var noMoreTaskAlert = function(callback){
     alert("Well done! There are no more tasks available -- this HIT will be automatically submitted. Thank you for your help! :)");
