@@ -28,6 +28,8 @@ class Answer(models.Model):
     amt_assignment = models.ForeignKey(AMTAssignment, on_delete=models.CASCADE, null=True, default=None)
     mturk_worker_id = models.CharField(max_length=255, null=True, default=None)
     value = models.TextField(null=True, default=None)
+    session_tab_id = models.CharField(max_length=32, null=False)
+    user_agent = models.CharField(max_length=255, null=False)
     time_created = models.DateTimeField(auto_now_add=True, blank=True)
     time_assigned = models.DateTimeField(null=True)
     time_submitted = models.DateTimeField(null=True)

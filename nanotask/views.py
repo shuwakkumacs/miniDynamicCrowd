@@ -43,7 +43,12 @@ def load_preview_nanotask(request, project_name, mturk_worker_id):
 
 
 @csrf_exempt
-def load_nanotask(request, project_name, mturk_worker_id):
+def load_nanotask(request):
+    request_json = json.loads(request.body)
+    project_name = request_json["project_name"]
+    mturk_worker_id = request_json["mturk_worker_id"]
+    session_tab_id = request_json["session_tab_id"]
+    user_agent = request_json["user_agent"]
     # FIXME:: obviously not optimal or scaling
     #reserved_nanotask = Nanotask.objects.raw("SELECT * FROM nanotask INNER JOIN answers ON nanotask.id=answers.nanotask_id WHERE nanotask.id NOT IN (SELECT nanotask_id FROM answers WHERE mturk_worker_id!='{}') AND nanotask.project_name='{}';".format(mturk_worker_id,project_name))
     # TODO:: what to do with reservation --- like when reloading the page or coming back to the task later?
@@ -52,13 +57,13 @@ def load_nanotask(request, project_name, mturk_worker_id):
     #    nanotask = reserved_nanotask
     #else:
         # TODO:: get one under a certain criteria
-    nanotask = Nanotask.objects.filter(answer__mturk_worker_id=mturk_worker_id, answer__value=None, project_name=project_name).order_by('id').first();
+    nanotask = Nanotask.objects.filter(answer__mturk_worker_id=mturk_worker_id, answer__session_tab_id=session_tab_id, answer__value=None, project_name=project_name).order_by('id').first();
     if not nanotask:
-        sql = "update nanotask_answer set mturk_worker_id='{0}' where mturk_worker_id is null and nanotask_id not in ( select nanotask_id from ( select distinct nanotask_id from nanotask_answer as a inner join nanotask_nanotask as n on a.nanotask_id=n.id where (a.mturk_worker_id='{0}' and n.project_name='{1}') or n.project_name<>'{1}') as tmp) order by nanotask_id asc, mturk_worker_id desc limit 1;".format(mturk_worker_id,project_name)
+        sql = "update nanotask_answer set mturk_worker_id='{0}', session_tab_id='{2}', user_agent='{3}' where mturk_worker_id is null and nanotask_id not in ( select nanotask_id from ( select distinct nanotask_id from nanotask_answer as a inner join nanotask_nanotask as n on a.nanotask_id=n.id where (a.mturk_worker_id='{0}' and n.project_name='{1}') or n.project_name<>'{1}') as tmp) order by nanotask_id asc, mturk_worker_id desc limit 1;".format(mturk_worker_id,project_name, session_tab_id, user_agent)
         with connection.cursor() as cursor:
             cursor.execute(sql)
         #nanotask = Nanotask.objects.raw("select * from nanotask_nanotask as n inner join nanotask_answer as a on n.id=a.nanotask_id where project_name='{0}' and n.id not in (select distinct nanotask_id from nanotask_answer where mturk_worker_id='{1}' and project_name='{0}')".format(project_name,mturk_worker_id))
-        nanotask = Nanotask.objects.filter(answer__mturk_worker_id=mturk_worker_id, answer__value=None, project_name=project_name).order_by('id').first();
+        nanotask = Nanotask.objects.filter(answer__mturk_worker_id=mturk_worker_id, answer__session_tab_id=session_tab_id, answer__value=None, project_name=project_name).order_by('id').first();
     #with transaction.atomic():
     #    nanotask = Nanotask.objects.filter(project_name=project_name, answer__mturk_worker_id=None).exclude(answer__mturk_worker_id=mturk_worker_id).first()
     #    if nanotask:

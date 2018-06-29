@@ -14,6 +14,15 @@ submittedNanotasks = 0;
 
 timeNanotaskStarted = null;
 
+var randomSeed = function(){
+    var l = 16;
+    var c = "abcdefghijklmnopqrstuvwxyz0123456789";
+    var cl = c.length;
+    var r = "";
+    for(var i=0; i<l; i++) r += c[Math.floor(Math.random()*cl)];
+    return r;
+};
+
 var loadPreviewNanotask = function() {
     $.ajax({
         type: "GET",
@@ -32,17 +41,8 @@ var loadNanotask = function() {
         $("#base-nanotask").fadeIn("normal");
         timeNanotaskStarted = new Date();
         var idsAllInputVal = $("#nano-ids-all").val();
-        //var answersAllInputVal = $("#nano-answers-all").val();
-        //var secsAllInputVal = $("#nano-secs-all").val();
-        if(idsAllInputVal=="") {
-            idsAll = [];
-        //    secsAll = [];
-        //    answersAll = [];
-        } else {
-            idsAll = JSON.parse(idsAllInputVal);
-        //    secsAll = JSON.parse(secsAllInputVal);
-        //    answersAll = JSON.parse(answersAllInputVal);
-        }
+        if(idsAllInputVal=="") idsAll = [];
+        else idsAll = JSON.parse(idsAllInputVal);
     
         $(".nano-submit").on("click", function(){
             var secsElapsed = (new Date() - timeNanotaskStarted)/1000;
@@ -63,12 +63,9 @@ var loadNanotask = function() {
                 }
             }
             idsAll.push(nanotask.info.id);
-            //secsAll.push(secsElapsed);
-            //answersAll.push(answersJSON);
             $("#nano-ids-all").val(JSON.stringify(idsAll));
-            //$("#nano-secs-all").val(JSON.stringify(secsAll));
-            //$("#nano-answers-all").val(JSON.stringify(answersAll));
             submittedNanotasks += 1;
+            sessionStorage.setItem("submittedNanotasks", submittedNanotasks);
             data = {
                 "id": nanotask.info.id,
                 "sec": secsElapsed,
@@ -92,8 +89,14 @@ var loadNanotask = function() {
     };
 
     $.ajax({
-        type: "GET",
-        url: BASE_URL + "nanotask/nanotask/"+PROJECT_NAME+"/"+MTURK_WORKER_ID+"/",
+        type: "POST",
+        url: BASE_URL + "nanotask/nanotask/",
+        data: JSON.stringify({
+            "project_name": PROJECT_NAME,
+            "mturk_worker_id": MTURK_WORKER_ID,
+            "session_tab_id": sessionStorage.tabID,
+            "user_agent": window.navigator.userAgent
+        }),
         success: afterNanotaskLoadHandler,
         error: afterNanotaskLoadErrorHandler
     });
@@ -110,6 +113,7 @@ var submitHIT = function(){
         url: BASE_URL + "nanotask/assignment/save/",
         data: JSON.stringify(data),
         success: function(){
+            sessionStorage.removeItem("submittedNanotasks");
             if(TEST_MODE) { setTimeout(function(){ window.location.reload(); }, 500); }
             else $("#mturk_form").submit();
         },
@@ -164,6 +168,9 @@ $(function(){
         $("#base-instruction-button").click();
     } else { 
         $("#base-submitted-num-box").show();
+        var sessionSubmittedNanotasks = sessionStorage.getItem("submittedNanotasks");
+        if(sessionSubmittedNanotasks) submittedNanotasks = parseInt(sessionSubmittedNanotasks);
+        if(!sessionStorage.tabID) sessionStorage.tabID = randomSeed();
         loadNanotask();
     }
 });
