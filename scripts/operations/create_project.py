@@ -1,4 +1,7 @@
 import os
+import django
+from django.db import connection
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'DynamicCrowd.settings')
 
 def run(context):
     # not needed for now
@@ -22,6 +25,19 @@ def run(context):
     if not os.path.exists(path3):
         create_directory(path3)
     create_file("{}/{}.json".format(path3,context.project_name), settings_body)
+
+    path4 = "DynamicCrowd/.projects"
+    if not os.path.exists(path4):
+        create_file(path4, context.project_name)
+    else:
+        f = open(path4,"a")
+        f.write(context.project_name+"\n")
+        f.close()
+
+    django.setup()
+    with connection.cursor() as cursor:
+        cursor.execute("CREATE DATABASE {};".format(context.project_name))
+    os.system("python manage.py migrate --database {}".format(context.project_name))
 
 def directory_exists(dirpath):
     if os.path.exists(dirpath):

@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 """
 
 import os
+import sys
+sys.path.append(".")
+import DynamicCrowd.db as db
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -84,17 +87,7 @@ WSGI_APPLICATION = 'DynamicCrowd.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        "HOST": "172.17.0.1",
-        "PORT": 13306,
-        "USER": "dc_saito",
-        "PASSWORD": "dc_saito",
-        "NAME": "dc_saito"
-    }
-}
-
+DATABASES = db.db_settings
 
 # Password validation
 # https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators
