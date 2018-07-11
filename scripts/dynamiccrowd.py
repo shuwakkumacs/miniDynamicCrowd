@@ -6,7 +6,6 @@ import django
 import csv
 import sys
 import json
-import requests
 import concurrent.futures
 import boto3
 import argparse
