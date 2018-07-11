@@ -7,15 +7,21 @@ settings_common = {
     "PASSWORD": "admin"
 }
 
-f = open("DynamicCrowd/.projects","r")
-projects = list(f.readlines())
+default = copy.deepcopy(settings_common)
+default["NAME"] = "information_schema"
 
 db_settings = {
-    "default": copy.deepcopy(settings_common)
+    "default": default
 }
+    
 
-for project in projects:
-    project_name = project[:-1] if project[-1]=="\n" else project
-    setting = copy.deepcopy(settings_common)
-    setting["NAME"] = project_name
-    db_settings[project_name] = setting
+try:
+    f = open("DynamicCrowd/.projects","r")
+    projects = list(f.readlines())
+    for project in projects:
+        project_name = project[:-1] if project[-1]=="\n" else project
+        setting = copy.deepcopy(settings_common)
+        setting["NAME"] = project_name
+        db_settings[project_name] = setting
+except FileNotFoundError as e:
+    pass
