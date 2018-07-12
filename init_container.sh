@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # mysql
+chown -R mysql:mysql /var/lib/mysql /var/run/mysqld
 service mysql start;
 if [ -n "${MYSQL_USERNAME}" ] && [ -n "${MYSQL_PASSWORD}" ]; then
   mysql -u root -proot -Bse "CREATE USER $MYSQL_USERNAME@'myadmin.dcnet' IDENTIFIED BY '$MYSQL_PASSWORD';"
