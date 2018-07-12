@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # mysql
+service mysql start;
 if [ -n "${MYSQL_USERNAME}" ] && [ -n "${MYSQL_PASSWORD}" ]; then
   mysql -u root -proot -Bse "CREATE USER $MYSQL_USERNAME@'myadmin.dcnet' IDENTIFIED BY '$MYSQL_PASSWORD';"
   mysql -u root -proot -Bse "GRANT ALL PRIVILEGES ON *.* TO $MYSQL_USERNAME@'myadmin.dcnet'"
@@ -21,3 +22,5 @@ fi
 
 # database migration
 cd ~/DynamicCrowd; python manage.py makemigrations;
+
+/bin/bash
