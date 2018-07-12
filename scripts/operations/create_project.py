@@ -4,15 +4,15 @@ from django.db import connection
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'DynamicCrowd.settings')
 
 def run(context):
-    # not needed for now
-    #
-    #project = Project.objects.filter(name=self.project_name).first()
-    #if project:
-    #    print("ERROR: project {} already exists".format(self.project_name))
-    #else:
-    #    project = Project(name=self.project_name, nanotasks_per_hit=self.settings["DynamicCrowd"]["AnswersPerNanotask"])
-    #    project.save()
-        
+    path4 = "DynamicCrowd/.projects"
+    if not os.path.exists(path4):
+        create_file(path4, context.project_name)
+    f = open(path4,"r")
+    projects = [x[:-1] for x in f.readlines()]
+    if context.project_name in projects:
+        print("project '{}' already exists".format(context.project_name))
+        return
+
     path1 = "nanotask/templates/{}".format(context.project_name)
     if create_directory(path1):
         create_file("{}/preview.html".format(path1), preview_body)
@@ -26,13 +26,9 @@ def run(context):
         create_directory(path3)
     create_file("{}/{}.json".format(path3,context.project_name), settings_body)
 
-    path4 = "DynamicCrowd/.projects"
-    if not os.path.exists(path4):
-        create_file(path4, context.project_name)
-    else:
-        f = open(path4,"a")
-        f.write(context.project_name+"\n")
-        f.close()
+    f = open(path4,"a")
+    f.write(context.project_name+"\n")
+    f.close()
 
     django.setup()
     with connection.cursor() as cursor:

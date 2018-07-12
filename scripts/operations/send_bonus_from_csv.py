@@ -23,12 +23,12 @@ def run(context):
         reader = csv.reader(f, delimiter=",", quotechar="'")
         for row in reader:
             #executor.submit(send_bonus,row)
-            send_bonus(client,row)
+            send_bonus(client,row,context.project_name)
 
-def send_bonus(client,row):
+def send_bonus(client,row,project_name):
     mturk_assignment_id = row[0]
     reward = float(row[1])
-    amt_assignment = AMTAssignment.objects.filter(mturk_assignment_id=mturk_assignment_id).first()
+    amt_assignment = AMTAssignment.objects.using(project_name).filter(mturk_assignment_id=mturk_assignment_id).first()
     if amt_assignment:
         if amt_assignment.bonus_amount != 0.0:
             print("{}, ${:.2f} skipped (already paid)".format(mturk_assignment_id,reward))
@@ -40,7 +40,7 @@ def send_bonus(client,row):
                                   Reason='We are sending you a bonus of ${:.2f}. We sincerely apologize for the confusion and thank you very much again for your kind cooperation!'.format(reward))
                 amt_assignment.bonus_amount = reward
                 amt_assignment.time_bonus_sent = timezone.now()
-                amt_assignment.save()
+                amt_assignment.save(using=project_name)
                 print("{}, ${:.2f} success".format(mturk_assignment_id,reward))
             except Exception as e:
                 print("{}, ${:.2f} failed: {}".format(mturk_assignment_id,reward,e))

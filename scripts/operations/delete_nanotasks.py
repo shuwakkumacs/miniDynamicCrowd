@@ -25,4 +25,4 @@ def run(context):
                 args[name] = eval(name)
         args["project_name"] = context.project_name
         # DELETES ALL FOREIGN OBJECTS!!!
-        nanotasks = Nanotask.objects.filter(**args).delete()
+        nanotasks = Nanotask.objects.using(context.project_name).filter(**args).delete()

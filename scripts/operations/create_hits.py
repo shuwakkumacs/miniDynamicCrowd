@@ -21,7 +21,7 @@ def run(context):
                  + '<ExternalURL>{}/nanotask/base/{}/</ExternalURL>'.format(context.settings["BaseUrl"], context.project_name)\
                  + '<FrameHeight>{}</FrameHeight>'.format(project_settings["AMT"]["FrameHeight"])\
                  + '</ExternalQuestion>'
-    num_unsolved_answers = Answer.objects.filter(mturk_worker_id=None).count()
+    num_unsolved_answers = Answer.objects.using(context.project_name).filter(mturk_worker_id=None).count()
     num_hits = -(-num_unsolved_answers//project_settings["DynamicCrowd"]["NanotasksPerHIT"]) # ceiling division
     print("{} HITs posted!".format(num_hits))
     for i in range(num_hits):
@@ -29,8 +29,10 @@ def run(context):
         create_hit(client,context.project_name,is_sandbox,params)
 
 def create_hit(client,project_name,is_sandbox,params):
+    print(params)
+    return
     ret = client.create_hit(**params)
     mturk_hit_id = ret["HIT"]["HITId"]
     hit = HIT(mturk_hit_id=mturk_hit_id,project_name=project_name,is_sandbox=is_sandbox)
-    hit.save()
-    print(mturk_hit_id)
+    hit.save(using=project_name)
+    print("created {}".format(mturk_hit_id))

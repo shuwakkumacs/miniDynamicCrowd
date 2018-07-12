@@ -50,13 +50,13 @@ class Context:
         with transaction.atomic():
             for row in tqdm(generator, total=total):
                 nanotask = Nanotask(project_name=self.project_name, template_name=template_name, media_data=json.dumps(row))
-                nanotask.save()
+                nanotask.save(using=self.project_name)
                 for i in range(settings["DynamicCrowd"]["AnswersPerNanotask"]):
                     answer = Answer(nanotask=nanotask)
-                    answer.save()
+                    answer.save(using=self.project_name)
 
     def export_answers(self, callback):
-        for row in Answer.objects.select_related('nanotask').filter(nanotask__project_name=self.project_name):
+        for row in Answer.objects.using(self.project_name).filter(nanotask__project_name=self.project_name):
             callback(model_to_dict(row), model_to_dict(row.nanotask))
 
 def main():

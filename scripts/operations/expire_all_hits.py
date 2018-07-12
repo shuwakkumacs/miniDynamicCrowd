@@ -13,17 +13,17 @@ def run(context):
     is_sandbox = args.production
 
     client = context.get_mturk_client(is_sandbox)
-    hits = HIT.objects.filter(project_name=context.project_name,is_sandbox=is_sandbox,time_expired=None).all()
+    hits = HIT.objects.using(context.project_name).filter(project_name=context.project_name,is_sandbox=is_sandbox,time_expired=None).all()
 
     for hit in hits:
         #executor.submit(create_hit,client,params)
-        expire_hit(client,hit)
+        expire_hit(client,hit,context.project_name)
 
-def expire_hit(client,hit):
+def expire_hit(client,hit,project_name):
     try:
         ret = client.update_expiration_for_hit(HITId=hit.mturk_hit_id,ExpireAt=datetime.datetime(1,1,1))
         hit.time_expired = timezone.now()
-        hit.save()
+        hit.save(using=project_name)
         print(hit.mturk_hit_id)
     except:
         print("skipping {}".format(hit.mturk_hit_id))

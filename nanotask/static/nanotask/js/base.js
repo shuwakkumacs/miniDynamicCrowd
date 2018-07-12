@@ -69,7 +69,8 @@ var loadNanotask = function() {
             data = {
                 "id": nanotask.info.id,
                 "sec": secsElapsed,
-                "answer": answersJSON
+                "answer": answersJSON,
+                "project_name": PROJECT_NAME
             };
             submitNanotask(data, function(){
                 if(submittedNanotasks >= nanotasksPerHIT) submitHIT();
@@ -106,6 +107,7 @@ var submitHIT = function(){
     data["mturk_assignment_id"] = MTURK_ASSIGNMENT_ID;
     data["mturk_worker_id"] = MTURK_WORKER_ID;
     data["mturk_hit_id"] = MTURK_HIT_ID;
+    data["project_name"] = PROJECT_NAME;
     data["ids"] = JSON.parse($("#nano-ids-all").val());
     $("#base-nanotask-submitted").show();
     $.ajax({
