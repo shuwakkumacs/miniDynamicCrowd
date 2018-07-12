@@ -1,9 +1,9 @@
 {
-	"BaseUrl": "https://saito.r9n.net",
+	"BaseUrl": "",
 	"AMT": {
 		"Credentials": {
-			"AWSAccessKeyId": "AKIAIBSZJU54MMGSC5OQ",
-			"AWSSecretAccessKey": "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"
+			"AWSAccessKeyId": "",
+			"AWSSecretAccessKey": ""
 		}
 	}
 }
