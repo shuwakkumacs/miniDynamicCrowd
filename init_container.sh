@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # mysql
 if [ -n "${MYSQL_USERNAME}" ] && [ -n "${MYSQL_PASSWORD}" ]; then
   mysql -u root -proot -Bse "CREATE USER $MYSQL_USERNAME@'myadmin.dcnet' IDENTIFIED BY '$MYSQL_PASSWORD';"
