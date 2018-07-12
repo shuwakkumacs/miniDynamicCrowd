@@ -11,6 +11,7 @@ sed -i "s/^bind-address/#bind-address/" /etc/mysql/mysql.conf.d/mysqld.cnf;
 service mysql restart;
 
 # settings/global.json
+cp /root/DynamicCrowd/settings/global.json.default /root/DynamicCrowd/settings/global.json
 if [[ -n "${BASE_URL}" ]]; then
   sed -i "s/\"BaseUrl.*/\"BaseUrl\"\: \"$BASE_URL\",/" /root/DynamicCrowd/settings/global.json;
 fi

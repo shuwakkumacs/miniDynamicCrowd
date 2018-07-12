@@ -1,9 +1,0 @@
-{
-	"BaseUrl": "",
-	"AMT": {
-		"Credentials": {
-			"AWSAccessKeyId": "test_access_key_id",
-			"AWSSecretAccessKey": "test_secret_access_key"
-		}
-	}
-}
