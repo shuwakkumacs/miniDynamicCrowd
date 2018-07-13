@@ -4,8 +4,8 @@ from django.db import models
 
 class AMTAssignment(models.Model):
     mturk_assignment_id = models.CharField(max_length=255)
-    mturk_hit_id = models.CharField(max_length=255)
-    mturk_worker_id = models.CharField(max_length=255)
+    mturk_hit_id = models.CharField(max_length=255, blank=True, null=True)  # allow blank for testing
+    mturk_worker_id = models.CharField(max_length=255, blank=True, null=True)  # allow blank for testing
     bonus_amount = models.FloatField(default=0.0)
     time_created = models.DateTimeField(auto_now_add=True)
     time_bonus_sent = models.DateTimeField(blank=True, null=True)
