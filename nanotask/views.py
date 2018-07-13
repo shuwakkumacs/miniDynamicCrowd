@@ -24,42 +24,45 @@ def load_base(request, project_name):
 
 
 @csrf_exempt
-def load_preview_nanotask(request, project_name, mturk_worker_id):
-    template_path = "./{}/preview.html".format(project_name)
-    template = loader.get_template(template_path)
-    response = {
-        "info": {"id": None, "project_name": project_name, "template_name": "__preview__" },
-        "html": template.render({}, request)
-    } 
-    return JsonResponse(response)
-
+def load_static_template(request, project_name, template_name):
+    template_path = "./{}/{}.html".format(project_name,template_name)
+    return render(request, template_path)
 
 @csrf_exempt
-def load_nanotask(request):
-    request_json = json.loads(request.body)
-    project_name = request_json["project_name"]
-    mturk_worker_id = request_json["mturk_worker_id"]
-    session_tab_id = request_json["session_tab_id"]
-    user_agent = request_json["user_agent"]
-    nanotask = Nanotask.objects.using(project_name).filter(answer__mturk_worker_id=mturk_worker_id, answer__session_tab_id=session_tab_id, answer__value=None, project_name=project_name).order_by('id').first();
-    if not nanotask:
-        sql = "update {4}.nanotask_answer set mturk_worker_id='{0}', session_tab_id='{2}', user_agent='{3}', time_assigned='{5}' where mturk_worker_id is null and nanotask_id not in ( select nanotask_id from ( select distinct nanotask_id from {4}.nanotask_answer as a inner join {4}.nanotask_nanotask as n on a.nanotask_id=n.id where (a.mturk_worker_id='{0}' and n.project_name='{1}') or n.project_name<>'{1}') as tmp) order by nanotask_id asc, mturk_worker_id desc limit 1;".format(mturk_worker_id,project_name, session_tab_id, user_agent, project_name, timezone.now())
-        with connection.cursor() as cursor:
-            cursor.execute(sql)
-        nanotask = Nanotask.objects.using(project_name).filter(answer__mturk_worker_id=mturk_worker_id, answer__session_tab_id=session_tab_id, answer__value=None, project_name=project_name).order_by('id').first();
-
-    if nanotask:
-        media_data = json.loads(nanotask.media_data)
-        template_path = "./{}/{}.html".format(project_name, nanotask.template_name)
+def load_nanotask(request, project_name):
+    if "preview" in request.GET:
+        template_path = "./{}/preview.html".format(project_name)
         template = loader.get_template(template_path)
         response = {
-            "info": {"id": nanotask.id, "project_name": nanotask.project_name, "template_name": nanotask.template_name },
-            "html": template.render(media_data, request)
+            "info": {"id": None, "project_name": project_name, "template_name": "__preview__" },
+            "html": template.render({}, request)
         } 
-        ret = JsonResponse(response)
+        return JsonResponse(response)
+
     else:
-        ret = JsonResponse({"info": None, "html": None}) 
-    return ret
+        request_json = json.loads(request.body)
+        mturk_worker_id = request_json["mturk_worker_id"]
+        session_tab_id = request_json["session_tab_id"]
+        user_agent = request_json["user_agent"]
+        nanotask = Nanotask.objects.using(project_name).filter(answer__mturk_worker_id=mturk_worker_id, answer__session_tab_id=session_tab_id, answer__value=None, project_name=project_name).order_by('id').first();
+        if not nanotask:
+            sql = "update {4}.nanotask_answer set mturk_worker_id='{0}', session_tab_id='{2}', user_agent='{3}', time_assigned='{5}' where mturk_worker_id is null and nanotask_id not in ( select nanotask_id from ( select distinct nanotask_id from {4}.nanotask_answer as a inner join {4}.nanotask_nanotask as n on a.nanotask_id=n.id where (a.mturk_worker_id='{0}' and n.project_name='{1}') or n.project_name<>'{1}') as tmp) order by nanotask_id asc, mturk_worker_id desc limit 1;".format(mturk_worker_id,project_name, session_tab_id, user_agent, project_name, timezone.now())
+            with connection.cursor() as cursor:
+                cursor.execute(sql)
+            nanotask = Nanotask.objects.using(project_name).filter(answer__mturk_worker_id=mturk_worker_id, answer__session_tab_id=session_tab_id, answer__value=None, project_name=project_name).order_by('id').first();
+    
+        if nanotask:
+            media_data = json.loads(nanotask.media_data)
+            template_path = "./{}/{}.html".format(project_name, nanotask.template_name)
+            template = loader.get_template(template_path)
+            response = {
+                "info": {"id": nanotask.id, "project_name": nanotask.project_name, "template_name": nanotask.template_name },
+                "html": template.render(media_data, request)
+            } 
+            ret = JsonResponse(response)
+        else:
+            ret = JsonResponse({"info": None, "html": None}) 
+        return ret
 
 
 @csrf_exempt

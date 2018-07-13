@@ -3,7 +3,7 @@ PROJECT_NAME = hrefSplit[hrefSplit.length-2];
 
 MTURK_WORKER_ID = turkGetParam("workerId", "TEST_WORKER");
 MTURK_ASSIGNMENT_ID = turkGetParam("assignmentId", "ASSIGNMENT_ID_NOT_AVAILABLE");
-MTURK_HIT_ID = turkGetParam("hitId", null);
+MTURK_HIT_ID = turkGetParam("hitId", "TEST_DUMMY_HIT");
 
 TEST_MODE = MTURK_ASSIGNMENT_ID=="test" ? true : false;
 
@@ -26,7 +26,7 @@ var randomSeed = function(){
 var loadPreviewNanotask = function() {
     $.ajax({
         type: "GET",
-        url: BASE_URL + "nanotask/nanotask/"+PROJECT_NAME+"/"+MTURK_WORKER_ID+"/preview/",
+        url: BASE_URL + "nanotask/nanotask/"+PROJECT_NAME+"/?preview=1",
         success: function(nanotask){
             $("#base-nanotask").html(nanotask.html);
         }
@@ -91,9 +91,8 @@ var loadNanotask = function() {
 
     $.ajax({
         type: "POST",
-        url: BASE_URL + "nanotask/nanotask/",
+        url: BASE_URL + "nanotask/nanotask/"+PROJECT_NAME+"/",
         data: JSON.stringify({
-            "project_name": PROJECT_NAME,
             "mturk_worker_id": MTURK_WORKER_ID,
             "session_tab_id": sessionStorage.tabID,
             "user_agent": window.navigator.userAgent
