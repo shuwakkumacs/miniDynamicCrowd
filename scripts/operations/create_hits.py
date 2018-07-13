@@ -29,8 +29,6 @@ def run(context):
         create_hit(client,context.project_name,is_sandbox,params)
 
 def create_hit(client,project_name,is_sandbox,params):
-    print(params)
-    return
     ret = client.create_hit(**params)
     mturk_hit_id = ret["HIT"]["HITId"]
     hit = HIT(mturk_hit_id=mturk_hit_id,project_name=project_name,is_sandbox=is_sandbox)
