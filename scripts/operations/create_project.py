@@ -6,12 +6,13 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'DynamicCrowd.settings')
 def run(context):
     path4 = "DynamicCrowd/.projects"
     if not os.path.exists(path4):
-        create_file(path4, context.project_name)
+        create_file(path4)
     f = open(path4,"r")
     projects = [x[:-1] for x in f.readlines()]
     if context.project_name in projects:
         print("project '{}' already exists".format(context.project_name))
         return
+    f.close()
 
     path1 = "nanotask/templates/{}".format(context.project_name)
     if create_directory(path1):
