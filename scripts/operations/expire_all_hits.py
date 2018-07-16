@@ -16,8 +16,8 @@ def run(context):
     hits = HIT.objects.using(context.project_name).filter(project_name=context.project_name,is_sandbox=is_sandbox,time_expired=None).all()
 
     for hit in hits:
-        #executor.submit(create_hit,client,params)
-        expire_hit(client,hit,context.project_name)
+        executor.submit(expire_hit,client,hit,context.project_name)
+        #expire_hit(client,hit,context.project_name)
 
 def expire_hit(client,hit,project_name):
     try:

@@ -25,8 +25,8 @@ def run(context):
     num_hits = -(-num_unsolved_answers//project_settings["DynamicCrowd"]["NanotasksPerHIT"]) # ceiling division
     print("{} HITs posted!".format(num_hits))
     for i in range(num_hits):
-        #executor.submit(create_hit,client,params)
-        create_hit(client,context.project_name,is_sandbox,params)
+        executor.submit(create_hit,client,context.project_name,is_sandbox,params)
+        #create_hit(client,context.project_name,is_sandbox,params)
 
 def create_hit(client,project_name,is_sandbox,params):
     ret = client.create_hit(**params)
