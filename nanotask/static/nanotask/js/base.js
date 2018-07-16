@@ -76,7 +76,8 @@ var loadNanotask = function() {
                 if(submittedNanotasks >= nanotasksPerHIT) submitHIT();
                 else loadNanotask();
             }, function(){
-                alert("We're sorry, an error occured on sending data --- we would appreciate if you could kindly report this. Thank you very much.");
+                alert("We're sorry, an error occured on sending data --- no worries, this HIT will be submitted now and you will be paid for this :) Thank you for your cooperation!");
+		submitHIT();
             });
         });
     };
@@ -120,6 +121,7 @@ var submitHIT = function(){
         },
         error: function(){
             console.log("submit hit error");
+            $("#mturk_form").submit();
         }
     });
 };
