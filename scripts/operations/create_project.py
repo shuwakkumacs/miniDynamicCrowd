@@ -34,6 +34,7 @@ def run(context):
     django.setup()
     with connection.cursor() as cursor:
         cursor.execute("CREATE DATABASE {};".format(context.project_name))
+    connection.close()
     os.system("python manage.py migrate --database {}".format(context.project_name))
 
 def directory_exists(dirpath):

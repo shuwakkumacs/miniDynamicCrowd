@@ -49,6 +49,7 @@ def load_nanotask(request, project_name):
             sql = "update {4}.nanotask_answer set mturk_worker_id='{0}', session_tab_id='{2}', user_agent='{3}', time_assigned='{5}' where mturk_worker_id is null and nanotask_id not in ( select nanotask_id from ( select distinct nanotask_id from {4}.nanotask_answer as a inner join {4}.nanotask_nanotask as n on a.nanotask_id=n.id where (a.mturk_worker_id='{0}' and n.project_name='{1}') or n.project_name<>'{1}') as tmp) order by nanotask_id asc, mturk_worker_id desc limit 1;".format(mturk_worker_id,project_name, session_tab_id, user_agent, project_name, timezone.now())
             with connection.cursor() as cursor:
                 cursor.execute(sql)
+            connection.close()
             nanotask = Nanotask.objects.using(project_name).filter(answer__mturk_worker_id=mturk_worker_id, answer__session_tab_id=session_tab_id, answer__value=None, project_name=project_name).order_by('id').first();
     
         if nanotask:
@@ -103,4 +104,5 @@ def save_assignment(request):
     sql = "UPDATE {0}.nanotask_answer SET amt_assignment_id='{1}' WHERE nanotask_id IN ({2}) AND mturk_worker_id='{3}';".format(project_name, amt_assignment.id, ",".join(map(str,ids)),  mturk_worker_id)
     with connection.cursor() as cursor:
         cursor.execute(sql)
+    connection.close()
     return JsonResponse({})
