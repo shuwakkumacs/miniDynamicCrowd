@@ -9,6 +9,7 @@ import json
 import concurrent.futures
 import boto3
 import argparse
+import secrets
 sys.path.append(".")
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'DynamicCrowd.settings')
 django.setup()
@@ -45,11 +46,12 @@ class Context:
         )
     
     def save_nanotasks(self, template_name, generator, total=0):
+        create_id = secrets.token_hex(8)
         with open("/root/DynamicCrowd/settings/projects/{}.json".format(self.project_name)) as f:
             settings = json.load(f)
         with transaction.atomic():
             for row in tqdm(generator, total=total):
-                nanotask = Nanotask(project_name=self.project_name, template_name=template_name, media_data=json.dumps(row))
+                nanotask = Nanotask(project_name=self.project_name, template_name=template_name, media_data=json.dumps(row), create_id=create_id)
                 nanotask.save(using=self.project_name)
                 for i in range(settings["DynamicCrowd"]["AnswersPerNanotask"]):
                     answer = Answer(nanotask=nanotask)

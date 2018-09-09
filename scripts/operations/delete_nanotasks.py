@@ -17,7 +17,9 @@ def run(context):
     template_name = args.template
 
     if not (id or create_id or template_name):
-        print("specify at least one filtering option")
+        ans = input("deleting all. are you sure? [y/N]: ")
+        if ans=="y":
+             anotasks = Nanotask.objects.using(context.project_name).delete()
     else:
         args = {}
         for name in ['id','create_id','template_name']:

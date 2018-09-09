@@ -21,6 +21,7 @@ class Nanotask(models.Model):
     project_name = models.TextField(max_length=255)
     template_name = models.TextField(max_length=255)
     media_data = models.TextField(blank=True, default="{}")
+    create_id = models.CharField(max_length=100)
     time_created = models.DateTimeField(auto_now_add=True)
 
 class Answer(models.Model):
