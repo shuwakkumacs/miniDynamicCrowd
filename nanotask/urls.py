@@ -4,6 +4,7 @@ from . import views
 
 app_name="nanotask"
 urlpatterns = [
+    url(r'^turkscanner/$', views.turkscanner, name="turkscanner"),
     url(r'^base/(?P<project_name>\w+)/$', views.load_base, name="load_base"),
     url(r'^nanotask/(?P<project_name>\w+)/$', views.load_nanotask, name="load_nanotask"),
     url(r'^nanotask/(?P<project_name>\w+)/(?P<template_name>\w+)/$', views.load_static_template, name="load_static_template"),

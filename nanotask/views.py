@@ -7,8 +7,33 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 from django.db import transaction, connection
 from django.utils import timezone
 from .models import *
+from .gbdt_funcs import *
 import json
 
+import pandas as pd
+import numpy as np
+import lightgbm as lgb
+
+@csrf_exempt
+def turkscanner(request):
+    cls = ['-30', '30-60', '60-120', '120-180', '180-300', '300-600', '600-1200', '1200-']
+
+    request_json = json.loads(request.body)
+    is_init = request_json["is_init"]
+    X_dict = request_json["data"]
+    X = pd.DataFrame(X_dict,index=['i',])
+    X = X.reindex(sorted(X.columns), axis=1)
+
+    if is_init:
+        X = preprocess(X)
+
+    model = lgb.Booster(model_file='/root/DynamicCrowd/models/lightgbm_model_regression_gain_20190321031604.txt')
+    y_pred = model.predict(X)
+    #y_pred_max = np.argmax(y_pred, axis=1)
+    #y_pred_cls = cls[y_pred_max[0]]
+
+    return JsonResponse({"ans": y_pred[0], "inputFeatures": X.to_dict(orient="records")})
+    #return JsonResponse({"ans": y_pred_cls})
 
 @xframe_options_exempt
 def load_base(request, project_name):
@@ -30,6 +55,7 @@ def load_static_template(request, project_name, template_name):
 
 @csrf_exempt
 def load_nanotask(request, project_name):
+    hoge = fuga
     if "preview" in request.GET:
         template_path = "./{}/preview.html".format(project_name)
         template = loader.get_template(template_path)

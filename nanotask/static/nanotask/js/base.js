@@ -36,6 +36,9 @@ var loadPreviewNanotask = function() {
 var loadNanotask = function() {
     var afterNanotaskLoadHandler = function(nanotask){
         if(!nanotask.info) afterNanotaskLoadErrorHandler();
+
+        if(nanotask.info=="max_worker") afterNanotaskLoadErrorHandler();
+
         $("#base-submitted-num-box>span.submitted-num").text(submittedNanotasks+1);
         $("#base-nanotask").html(nanotask.html);
         $("#base-nanotask").fadeIn("normal");
@@ -44,7 +47,7 @@ var loadNanotask = function() {
         if(idsAllInputVal=="") idsAll = [];
         else idsAll = JSON.parse(idsAllInputVal);
     
-        $(".nano-submit").on("click", function(){
+        $(".nano-submit").one("click", function(){
             var secsElapsed = (new Date() - timeNanotaskStarted)/1000;
             $("#base-nanotask").fadeOut("fast");
             var answersJSON = {};
@@ -54,7 +57,7 @@ var loadNanotask = function() {
                 var value = $(this).val();
                 answersJSON[name] = value;
             } else {
-                $answers = $(".nano-answer[type=radio]:checked,.nano-answer[type=text]");
+                $answers = $(".nano-answer[type=radio]:checked,.nano-answer[type=text],.nano-answer[type=hidden]");
                 for(var i in $answers){
                     var $answer = $answers.eq(i);
                     var name = $answer.attr("name");
@@ -89,6 +92,11 @@ var loadNanotask = function() {
             noMoreTaskAlert(submitHIT);
         }
     };
+
+    var maxWorkerErrorHandler = function(){
+        alert("Well done! There are no more tasks available -- this HIT will be automatically submitted. Thank you for your help! :)");
+    };
+
 
     $.ajax({
         type: "POST",
@@ -154,9 +162,9 @@ $("#base-instruction-button").on("click", function(){
     $("#base-instruction").show();
     $(this).prop("disabled", true);
 });
-$("#base-instruction-shadow").on("click", function(){
+$("#base-instruction-shadow, #base-instruction-close-button").on("click", function(){
     $("#base-instruction").animate({"marginTop":"-=200px", "display": "none"});
-    $(this).fadeOut("normal");
+    $("#base-instruction-shadow").fadeOut("normal");
     $("#base-instruction-button").prop("disabled", false);
 });
 $("#base-instruction").on("click", function(e){
@@ -165,16 +173,22 @@ $("#base-instruction").on("click", function(e){
 
 
 $(function(){
+    var whiteList = ["AK5AFB4VLBCGK","test2","A2GDE2EZTHMC4V"];
+    var workerId = turkGetParam("workerId");
     nanotasksPerHIT = $("#nanotasks-per-hit").val();
     if(MTURK_ASSIGNMENT_ID=="ASSIGNMENT_ID_NOT_AVAILABLE") {
         loadPreviewNanotask();
         $("#base-instruction-button").click();
     } else { 
-        $("#base-submitted-num-box").show();
-        var sessionSubmittedNanotasks = sessionStorage.getItem("submittedNanotasks");
-        if(sessionSubmittedNanotasks) submittedNanotasks = parseInt(sessionSubmittedNanotasks);
-        if(!sessionStorage.tabID) sessionStorage.tabID = randomSeed();
-        loadNanotask();
+        //if(whiteList.indexOf(workerId)>-1){
+            $("#base-submitted-num-box").show();
+            var sessionSubmittedNanotasks = sessionStorage.getItem("submittedNanotasks");
+            if(sessionSubmittedNanotasks) submittedNanotasks = parseInt(sessionSubmittedNanotasks);
+            if(!sessionStorage.tabID) sessionStorage.tabID = randomSeed();
+            loadNanotask();
+        //} else {
+        //    alert("We're sorry, but you are not eligible to submit this HIT.");
+        //}
     }
 });
 

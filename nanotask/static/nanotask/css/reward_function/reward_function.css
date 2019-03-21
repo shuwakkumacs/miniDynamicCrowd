@@ -1,0 +1,77 @@
+#plugin-all {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+}
+
+#plugin-wrapper {
+    width: 100%;
+    margin: 0 auto;
+    position: relative;
+    background: #ccc;
+}
+
+#function-wrapper {
+    position: absolute;
+}
+
+#axes-svg, #function-svg, #progressbar-svg, #xticks-svg, #yticks-svg, #zeroticks-svg {
+    position: absolute;
+}
+
+#xticks-svg, #yticks-svg, #zeroticks-svg {
+    font-family: Helvetica;
+}
+
+#axes-svg, #progressbar-svg {
+    width: 100%;
+    height: 100%;
+}
+
+#function-svg {
+    height: 80%;
+    width: 100%;
+    top: 20%;
+    left: 0;
+}
+
+#right-boxes {
+    position: absolute;
+    padding: 0;
+    margin: 0;
+    text-align: center;
+    font-family: Helvetica;
+    color: white;
+    background: #000;
+    border-radius: 5px;
+}
+
+#elapsed-time, #reward {
+    position: absolute;
+    box-sizing: border-box;
+    margin: 0;
+    width: 100%;
+    line-height: 100%;
+}
+
+#elapsed-time { 
+    height: 40%;
+    top: 60%;
+    font-size: 24px;
+}
+#reward {
+    height: 60%;
+    top: 0%;
+    font-size: 40px;
+}
+
+@keyframes flash {
+    0% { background: #00bf06; }
+    100% { background: #000; }
+}
+.flash-animation {
+    animation: flash 0.5s ease-in;
+    animation-fill-mode: forwards;
+}
+    

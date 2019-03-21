@@ -15,6 +15,6 @@
 	"DynamicCrowd": {
         "Title": "Compensation HIT (notified workers only)",
 		"NanotasksPerHIT": 1,
-		"AnswersPerNanotask": 50
+		"AnswersPerNanotask": 10
 	}
 }
