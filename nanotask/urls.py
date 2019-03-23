@@ -8,5 +8,5 @@ urlpatterns = [
     url(r'^nanotask/(?P<project_name>\w+)/$', views.load_nanotask, name="load_nanotask"),
     url(r'^nanotask/(?P<project_name>\w+)/(?P<template_name>\w+)/$', views.load_static_template, name="load_static_template"),
     url(r'^answer/save/$', views.save_answer, name="save_answer"),
-    url(r'^assignment/save/$', views.save_assignment, name="save_assignment"),
+    url(r'^assignment/save/$', views.update_completed_hit, name="update_completed_hit"),
 ]

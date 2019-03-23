@@ -54,11 +54,11 @@ class Context:
                 nanotask = Nanotask(project_name=self.project_name, template_name=template_name, media_data=json.dumps(row), create_id=create_id)
                 nanotask.save(using=self.project_name)
                 for i in range(settings["DynamicCrowd"]["AnswersPerNanotask"]):
-                    answer = Answer(nanotask=nanotask)
+                    answer = Ticket(nanotask=nanotask)
                     answer.save(using=self.project_name)
 
     def export_answers(self, callback):
-        for row in Answer.objects.using(self.project_name).filter(nanotask__project_name=self.project_name):
+        for row in Ticket.objects.using(self.project_name).filter(nanotask__project_name=self.project_name):
             callback(model_to_dict(row), model_to_dict(row.nanotask))
 
 def main():

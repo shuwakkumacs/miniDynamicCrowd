@@ -24,14 +24,19 @@ class Nanotask(models.Model):
     create_id = models.CharField(max_length=100)
     time_created = models.DateTimeField(auto_now_add=True)
 
-class Answer(models.Model):
+class Ticket(models.Model):
     nanotask = models.ForeignKey(Nanotask, on_delete=models.CASCADE)
     amt_assignment = models.ForeignKey(AMTAssignment, on_delete=models.CASCADE, blank=True, null=True)
     mturk_worker_id = models.CharField(max_length=255, blank=True, null=True)
     session_tab_id = models.CharField(max_length=32)
-    value = models.TextField(blank=True, null=True)
     time_created = models.DateTimeField(auto_now_add=True)
     time_assigned = models.DateTimeField(blank=True, null=True)
     time_submitted = models.DateTimeField(blank=True, null=True)
-    secs_elapsed = models.FloatField(default=0.0)
+    working_time = models.FloatField(default=0.0)
     user_agent = models.CharField(max_length=255)
+
+class Answer(models.Model):
+    ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE)
+    name = models.TextField()
+    value = models.TextField()
+    time_created = models.DateTimeField(auto_now_add=True)

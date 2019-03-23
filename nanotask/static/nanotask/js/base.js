@@ -50,18 +50,65 @@ var loadNanotask = function() {
             var answersJSON = {};
 
             if($(this).attr("name")){
+
                 var name = $(this).attr("name");
                 var value = $(this).val();
                 answersJSON[name] = value;
-            } else {
-                $answers = $(".nano-answer[type=radio]:checked,.nano-answer[type=text]");
-                for(var i in $answers){
-                    var $answer = $answers.eq(i);
-                    var name = $answer.attr("name");
-                    var value = $answer.val();
-                    answersJSON[name] = value;
+
+            }
+
+            $answers = $(".nano-answer");
+            all_inputs = {};
+            $answers.each(function(i,ans){
+
+                if(ans.tagName=="INPUT")
+                    var type = ans.type;
+                else if(ans.tagName=="TEXTAREA")
+                    var type = "textarea";
+                else if(ans.tagName=="SELECT")
+                    var type = "select";
+
+                if(ans.type in all_inputs) {
+                    if(all_inputs[ans.type].indexOf(ans.name)==-1)
+                        all_inputs[ans.type].push(ans.name);
+                } else {
+                    all_inputs[ans.type] = [ans.name];
+                }
+
+            });
+
+            for(var type in all_inputs){
+                for(var i in all_inputs[type]){
+
+                    var name = all_inputs[type][i];
+
+                    switch(type){
+
+                        case "checkbox":
+                            var $checked = $(`.nano-answer[type=checkbox][name=${name}]:checked`);
+                            answersJSON[name] = [];
+                            $checked.each(function(j,checked){
+                                answersJSON[name].push($(checked).val());
+                            });
+                            break;
+
+                        case "radio":
+                            var $checked = $(`.nano-answer[type=radio][name=${name}]:checked`);
+                            answersJSON[name] = $checked.val();
+                            break;
+
+                        case "select":
+                            var $selected = $(`.nano-answer[type=select][name=${name}] option:selected`);
+                            answersJSON[name] = $selected.val();
+                            break;
+
+                        default:
+                            answersJSON[name] = $(`.nano-answer[name=${name}]`).val();
+                            break;
+                    }
                 }
             }
+
             idsAll.push(nanotask.info.id);
             $("#nano-ids-all").val(JSON.stringify(idsAll));
             submittedNanotasks += 1;
@@ -77,7 +124,7 @@ var loadNanotask = function() {
                 else loadNanotask();
             }, function(){
                 alert("We're sorry, an error occured on sending data --- no worries, this HIT will be submitted now and you will be paid for this :) Thank you for your cooperation!");
-		submitHIT();
+    	    	submitHIT();
             });
         });
     };
@@ -139,7 +186,7 @@ var submitNanotask = function(data, success, error){
 }
 
 var noMoreTaskAlert = function(callback){
-    alert("Well done! There are no more tasks available -- this HIT will be automatically submitted. Thank you for your help! :)");
+    alert("Well done! There are no more tasks available -- this HIT will be automatically submitted. We appreciate your help! :)");
     callback();
 };
 
