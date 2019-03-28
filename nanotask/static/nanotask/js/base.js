@@ -11,6 +11,7 @@ BASE_URL = window.location.origin+"/";
 
 nanotasksPerHIT = -1;
 submittedNanotasks = 0;
+nanotaskStatus = "first";
 
 timeNanotaskStarted = null;
 
@@ -35,98 +36,117 @@ var loadPreviewNanotask = function() {
 
 var loadNanotask = function() {
     var afterNanotaskLoadHandler = function(nanotask){
-        if(!nanotask.info) afterNanotaskLoadErrorHandler();
-        $("#base-submitted-num-box>span.submitted-num").text(submittedNanotasks+1);
-        $("#base-nanotask").html(nanotask.html);
-        $("#base-nanotask").fadeIn("normal");
-        timeNanotaskStarted = new Date();
-        var idsAllInputVal = $("#nano-ids-all").val();
-        if(idsAllInputVal=="") idsAll = [];
-        else idsAll = JSON.parse(idsAllInputVal);
-    
-        $(".nano-submit").on("click", function(){
-            var secsElapsed = (new Date() - timeNanotaskStarted)/1000;
-            $("#base-nanotask").fadeOut("fast");
-            var answersJSON = {};
+        if(nanotask.status=="finish" || submittedNanotasks>nanotasksPerHIT) submitHIT();
+        else if(!nanotask.info) afterNanotaskLoadErrorHandler();
+        else {
+            nanotaskStatus = nanotask.status
+            sessionStorage.setItem("nanotaskStatus", nanotaskStatus);
 
-            if($(this).attr("name")){
-
-                var name = $(this).attr("name");
-                var value = $(this).val();
-                answersJSON[name] = value;
-
+            $("#base-submitted-num-box").hide();
+            if(nanotaskStatus=="first") {
+                //$("#base-submitted-num-box-first").show();
             }
+            else if(nanotaskStatus=="last") {
+                //$("#base-submitted-num-box-last").show();
+            }
+            else {
+                $("#base-submitted-num-box").show();
+                $("#base-submitted-num-box>span.submitted-num").text(submittedNanotasks+1);
+            }
+            $("#base-nanotask").html(nanotask.html);
+            $("#base-nanotask").fadeIn("normal");
+            timeNanotaskStarted = new Date();
+            var idsAllInputVal = $("#nano-ids-all").val();
+            if(idsAllInputVal=="") idsAll = [];
+            else idsAll = JSON.parse(idsAllInputVal);
+    
+            $(".nano-submit").on("click", function(){
+                var secsElapsed = (new Date() - timeNanotaskStarted)/1000;
+                $("#base-nanotask").fadeOut("fast");
+                var answersJSON = {};
 
-            $answers = $(".nano-answer");
-            all_inputs = {};
-            $answers.each(function(i,ans){
+                if($(this).attr("name")){
 
-                if(ans.tagName=="INPUT")
-                    var type = ans.type;
-                else if(ans.tagName=="TEXTAREA")
-                    var type = "textarea";
-                else if(ans.tagName=="SELECT")
-                    var type = "select";
+                    var name = $(this).attr("name");
+                    var value = $(this).val();
+                    answersJSON[name] = value;
 
-                if(ans.type in all_inputs) {
-                    if(all_inputs[ans.type].indexOf(ans.name)==-1)
-                        all_inputs[ans.type].push(ans.name);
-                } else {
-                    all_inputs[ans.type] = [ans.name];
                 }
 
-            });
+                $answers = $(".nano-answer");
+                all_inputs = {};
+                $answers.each(function(i,ans){
 
-            for(var type in all_inputs){
-                for(var i in all_inputs[type]){
+                    if(ans.tagName=="INPUT")
+                        var type = ans.type;
+                    else if(ans.tagName=="TEXTAREA")
+                        var type = "textarea";
+                    else if(ans.tagName=="SELECT")
+                        var type = "select";
 
-                    var name = all_inputs[type][i];
+                    if(ans.type in all_inputs) {
+                        if(all_inputs[ans.type].indexOf(ans.name)==-1)
+                            all_inputs[ans.type].push(ans.name);
+                    } else {
+                        all_inputs[ans.type] = [ans.name];
+                    }
 
-                    switch(type){
+                });
 
-                        case "checkbox":
-                            var $checked = $(`.nano-answer[type=checkbox][name=${name}]:checked`);
-                            answersJSON[name] = [];
-                            $checked.each(function(j,checked){
-                                answersJSON[name].push($(checked).val());
-                            });
-                            break;
+                for(var type in all_inputs){
+                    for(var i in all_inputs[type]){
 
-                        case "radio":
-                            var $checked = $(`.nano-answer[type=radio][name=${name}]:checked`);
-                            answersJSON[name] = $checked.val();
-                            break;
+                        var name = all_inputs[type][i];
 
-                        case "select":
-                            var $selected = $(`.nano-answer[type=select][name=${name}] option:selected`);
-                            answersJSON[name] = $selected.val();
-                            break;
+                        switch(type){
 
-                        default:
-                            answersJSON[name] = $(`.nano-answer[name=${name}]`).val();
-                            break;
+                            case "checkbox":
+                                var $checked = $(`.nano-answer[type=checkbox][name=${name}]:checked`);
+                                answersJSON[name] = [];
+                                $checked.each(function(j,checked){
+                                    answersJSON[name].push($(checked).val());
+                                });
+                                break;
+
+                            case "radio":
+                                var $checked = $(`.nano-answer[type=radio][name=${name}]:checked`);
+                                answersJSON[name] = $checked.val();
+                                break;
+
+                            case "select":
+                                var $selected = $(`.nano-answer[type=select][name=${name}] option:selected`);
+                                answersJSON[name] = $selected.val();
+                                break;
+
+                            default:
+                                answersJSON[name] = $(`.nano-answer[name=${name}]`).val();
+                                break;
+                        }
                     }
                 }
-            }
 
-            idsAll.push(nanotask.info.id);
-            $("#nano-ids-all").val(JSON.stringify(idsAll));
-            submittedNanotasks += 1;
-            sessionStorage.setItem("submittedNanotasks", submittedNanotasks);
-            data = {
-                "id": nanotask.info.id,
-                "sec": secsElapsed,
-                "answer": answersJSON,
-                "project_name": PROJECT_NAME
-            };
-            submitNanotask(data, function(){
-                if(submittedNanotasks >= nanotasksPerHIT) submitHIT();
-                else loadNanotask();
-            }, function(){
-                alert("We're sorry, an error occured on sending data --- no worries, this HIT will be submitted now and you will be paid for this :) Thank you for your cooperation!");
-    	    	submitHIT();
+                idsAll.push(nanotask.info.id);
+                $("#nano-ids-all").val(JSON.stringify(idsAll));
+
+                data = {
+                    "id": nanotask.info.id,
+                    "sec": secsElapsed,
+                    "answer": answersJSON,
+                    "project_name": PROJECT_NAME,
+                    "status": nanotaskStatus
+                };
+                submitNanotask(data, function(){
+                    if(["first","last"].indexOf(nanotaskStatus) == -1) { submittedNanotasks += 1; }
+                    if(nanotaskStatus=="first") nanotaskStatus = "";
+                    sessionStorage.setItem("submittedNanotasks", submittedNanotasks);
+                    if(nanotaskStatus=="last") submitHIT();
+                    else loadNanotask();
+                }, function(){
+                    alert("We're sorry, an error occured on sending data --- no worries, this HIT will be submitted now and you will be paid for this :) Thank you for your cooperation!");
+    	        	submitHIT();
+                });
             });
-        });
+        }
     };
     
     var afterNanotaskLoadErrorHandler = function(){
@@ -137,13 +157,21 @@ var loadNanotask = function() {
         }
     };
 
+
+    if(typeof(nanotaskStatus)==="undefined") nanotaskStatus = "first";
+    if(submittedNanotasks == nanotasksPerHIT) nanotaskStatus = "last";
+
+    sessionStorage.setItem("nanotaskStatus", nanotaskStatus);
+
+
     $.ajax({
         type: "POST",
         url: BASE_URL + "nanotask/nanotask/"+PROJECT_NAME+"/",
         data: JSON.stringify({
             "mturk_worker_id": MTURK_WORKER_ID,
             "session_tab_id": sessionStorage.tabID,
-            "user_agent": window.navigator.userAgent
+            "user_agent": window.navigator.userAgent,
+            "status": nanotaskStatus
         }),
         success: afterNanotaskLoadHandler,
         error: afterNanotaskLoadErrorHandler
@@ -163,11 +191,11 @@ var submitHIT = function(){
         data: JSON.stringify(data),
         success: function(){
             sessionStorage.removeItem("submittedNanotasks");
+            sessionStorage.setItem("nanotaskStatus", "first");
             if(TEST_MODE) { setTimeout(function(){ window.location.reload(); }, 500); }
             else $("#mturk_form").submit();
         },
         error: function(){
-            console.log("submit hit error");
             $("#mturk_form").submit();
         }
     });
@@ -218,9 +246,15 @@ $(function(){
         $("#base-instruction-button").click();
     } else { 
         $("#base-submitted-num-box").show();
+
         var sessionSubmittedNanotasks = sessionStorage.getItem("submittedNanotasks");
-        if(sessionSubmittedNanotasks) submittedNanotasks = parseInt(sessionSubmittedNanotasks);
+        submittedNanotasks = sessionSubmittedNanotasks ? parseInt(sessionSubmittedNanotasks): 0;
+
+        nanotaskStatus = sessionStorage.getItem("nanotaskStatus");
+        if(nanotaskStatus===null) nanotaskStatus = "first";
+
         if(!sessionStorage.tabID) sessionStorage.tabID = randomSeed();
+
         loadNanotask();
     }
 });
