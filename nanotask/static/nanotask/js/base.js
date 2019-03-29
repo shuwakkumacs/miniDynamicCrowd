@@ -201,9 +201,9 @@ $("#base-instruction-button").on("click", function(){
     $("#base-instruction").show();
     $(this).prop("disabled", true);
 });
-$("#base-instruction-shadow").on("click", function(){
+$("#base-instruction-shadow, #base-instruction-close-button").on("click", function(){
     $("#base-instruction").animate({"marginTop":"-=200px", "display": "none"});
-    $(this).fadeOut("normal");
+    $("#base-instruction-shadow").fadeOut("normal");
     $("#base-instruction-button").prop("disabled", false);
 });
 $("#base-instruction").on("click", function(e){
