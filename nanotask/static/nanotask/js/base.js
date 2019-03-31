@@ -36,6 +36,8 @@ var loadPreviewNanotask = function() {
 
 var loadNanotask = function() {
     var afterNanotaskLoadHandler = function(nanotask){
+        if(nanotask.status=="last" && submittedNanotasks<nanotasksPerHIT)
+            alert("Well done! There seem to be no more tasks available. Please give us an extra minute for a few survey questions. Thank you for your contribution!");
         if(nanotask.status=="finish" || submittedNanotasks>nanotasksPerHIT) submitHIT();
         else if(!nanotask.info) afterNanotaskLoadErrorHandler();
         else {
@@ -136,7 +138,7 @@ var loadNanotask = function() {
                     "status": nanotaskStatus
                 };
                 submitNanotask(data, function(){
-                    if(["first","last"].indexOf(nanotaskStatus) == -1) { submittedNanotasks += 1; }
+                    if(["first", "last"].indexOf(nanotaskStatus) == -1) { submittedNanotasks += 1; }
                     if(nanotaskStatus=="first") nanotaskStatus = "";
                     sessionStorage.setItem("submittedNanotasks", submittedNanotasks);
                     if(nanotaskStatus=="last") submitHIT();

@@ -59,6 +59,7 @@ def load_nanotask(request, project_name):
 
     def reserve_nanotask(cursor, template_query):
         sql = "update {1}.nanotask_ticket set mturk_worker_id='{0}', session_tab_id='{2}', user_agent='{3}', time_assigned='{5}' where mturk_worker_id is null and nanotask_id not in ( select nanotask_id from ( select distinct nanotask_id from {1}.nanotask_ticket as a inner join {1}.nanotask_nanotask as n on a.nanotask_id=n.id where {4}(a.mturk_worker_id='{0}' and n.project_name='{1}') or n.project_name<>'{1}') as tmp) order by nanotask_id asc, mturk_worker_id desc limit 1;".format(mturk_worker_id, project_name, session_tab_id, user_agent, template_query, timezone.now())
+        print(mturk_worker_id, project_name, session_tab_id, user_agent, template_query, timezone.now())
         cursor.execute(sql)
 
     def release_nanotask(cursor,nanotask):
@@ -114,7 +115,7 @@ def load_nanotask(request, project_name):
                 template_query_first = "n.template_name<>'{}' or ".format(first_template)
                 template_query_last = "n.template_name<>'{}' or ".format(last_template)
 
-                if status=="first": 
+                def reserve_nanotask_first(response):
                     reserve_nanotask(cursor, template_query_main)
                     nanotask_main = get_reserved_nanotask([first_template,last_template],"exclude")
                     if first_template:
@@ -126,18 +127,21 @@ def load_nanotask(request, project_name):
                                 response["status"] = "first"
                             else:
                                 release_nanotask(cursor,nanotask_main)
+                                nanotask = None
                         else:
                             nanotask = None
                     else:
                         nanotask = nanotask_main
                         response["status"] = ""
+                    return nanotask, response
 
-                elif status=="":
+                def reserve_nanotask_main(response):
                     reserve_nanotask(cursor, template_query_main)
                     nanotask = get_reserved_nanotask([first_template, last_template],"exclude")
                     response["status"] = ""
+                    return nanotask, response
 
-                elif status=="last":
+                def reserve_nanotask_last(response):
                     if last_template:
                         reserve_nanotask(cursor, template_query_last)
                         nanotask_last = get_reserved_nanotask([last_template],"include")
@@ -148,10 +152,19 @@ def load_nanotask(request, project_name):
                             response["status"] = "finish"
                     else:
                         response["status"] = "finish"
+                    return nanotask, response
 
-                #reserve_nanotask(cursor, template_query_main)
-                #nanotask = get_reserved_nanotask()
-    
+                if status=="first": 
+                    nanotask, response = reserve_nanotask_first(response)
+                    
+                elif status=="":
+                    nanotask, response = reserve_nanotask_main(response)
+                    if not nanotask:
+                        nanotask, response = reserve_nanotask_last(response)
+
+                elif status=="last":
+                    nanotask, response = reserve_nanotask_last(response)
+
         if "status" in response and response["status"]=="finish":
             ret = JsonResponse(response)
 
