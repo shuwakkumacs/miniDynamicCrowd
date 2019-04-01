@@ -6,6 +6,7 @@ from nanotask.models import *
 from django.db import transaction
 
 def run(context):
+    context.parser.add_argument("-n", "--number", help="manually-set number of HITs to create", default=None)
     context.parser.add_argument("--production", help="Production mode (non-sandbox)", action="store_false")
     args = context.parser.parse_args()
     is_sandbox = args.production
@@ -21,8 +22,12 @@ def run(context):
                  + '<ExternalURL>{}/nanotask/base/{}/</ExternalURL>'.format(context.settings["BaseUrl"], context.project_name)\
                  + '<FrameHeight>{}</FrameHeight>'.format(project_settings["AMT"]["FrameHeight"])\
                  + '</ExternalQuestion>'
-    num_unsolved_answers = Answer.objects.using(context.project_name).filter(mturk_worker_id=None).count()
-    num_hits = -(-num_unsolved_answers//project_settings["DynamicCrowd"]["NanotasksPerHIT"]) # ceiling division
+    num_unsolved_answers = Ticket.objects.using(context.project_name).filter(mturk_worker_id=None).count()
+    if args.number:
+        num_hits = int(args.number)
+    else:
+        num_hits = -(-num_unsolved_answers//project_settings["DynamicCrowd"]["NanotasksPerHIT"]) # ceiling division
+
     print("{} HITs posted!".format(num_hits))
     for i in range(num_hits):
         executor.submit(create_hit,client,context.project_name,is_sandbox,params)

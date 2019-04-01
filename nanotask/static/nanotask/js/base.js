@@ -45,6 +45,7 @@ var loadNanotask = function() {
             sessionStorage.setItem("nanotaskStatus", nanotaskStatus);
 
             $("#base-submitted-num-box").hide();
+            $("#nph-description").hide();
             if(nanotaskStatus=="first") {
                 //$("#base-submitted-num-box-first").show();
             }
@@ -53,6 +54,7 @@ var loadNanotask = function() {
             }
             else {
                 $("#base-submitted-num-box").show();
+                $("#nph-description").show();
                 $("#base-submitted-num-box>span.submitted-num").text(submittedNanotasks+1);
             }
             $("#base-nanotask").html(nanotask.html);
