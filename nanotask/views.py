@@ -78,20 +78,6 @@ def load_nanotask(request, project_name):
 
     project_settings = load_project_settings(project_name)
 
-    assignments = AMTAssignment.objects.using(project_name).filter(mturk_worker_id=mturk_worker_id).all()
-    try:
-        max_assignments_per_worker = project_settings["DynamicCrowd"]["MaxAssignmentsPerWorker"]
-    except:
-        max_assignments_per_worker = 9999999
-
-    if len(assignments)>=max_assignments_per_worker :
-        html = '<center>You have completed the maximum number of HITs you can submit.</center><script>alert("We are sorry, but you have completed the maximum number of HITs you can submit.");</script>';
-        response = {
-            "info": {"id": None, "project_name": project_name, "template_name": "__maxassignments__" },
-            "html": html
-        } 
-        return JsonResponse(response)
-
     if status=="__preview__":
 
         template_path = "./{}/preview.html".format(project_name)
@@ -103,6 +89,21 @@ def load_nanotask(request, project_name):
         return JsonResponse(response)
 
     else:
+
+        assignments = AMTAssignment.objects.using(project_name).filter(mturk_worker_id=mturk_worker_id).all()
+        try:
+            max_assignments_per_worker = project_settings["DynamicCrowd"]["MaxAssignmentsPerWorker"]
+        except:
+            max_assignments_per_worker = 9999999
+
+        if len(assignments)>=max_assignments_per_worker :
+            html = '<center>You have completed the maximum number of HITs you can submit.</center><script>alert("We are sorry, but you have completed the maximum number of HITs you can submit.");</script>';
+            response = {
+                "info": {"id": None, "project_name": project_name, "template_name": "__maxassignments__" },
+                "html": html
+            } 
+            return JsonResponse(response)
+
 
         try:
             first_template = project_settings["DynamicCrowd"]["FirstTemplate"]
