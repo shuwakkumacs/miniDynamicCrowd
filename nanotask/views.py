@@ -66,26 +66,43 @@ def load_nanotask(request, project_name):
         sql = "update {0}.nanotask_ticket set mturk_worker_id='', session_tab_id='', user_agent='', time_assigned=NULL where nanotask_id='{1}';".format(project_name, nanotask.id)
         cursor.execute(sql)
 
+
+
+    request_json = json.loads(request.body)
+    mturk_worker_id = request_json["mturk_worker_id"]
+    session_tab_id = request_json["session_tab_id"]
+    user_agent = request_json["user_agent"]
+    status = request_json["status"]
+    response = {}
+
+
     project_settings = load_project_settings(project_name)
 
-    if "preview" in request.GET:
+    assignments = AMTAssignment.objects.using(project_name).filter(mturk_worker_id=mturk_worker_id).all()
+    try:
+        max_assignments_per_worker = project_settings["DynamicCrowd"]["MaxAssignmentsPerWorker"]
+    except:
+        max_assignments_per_worker = 9999999
+
+    if len(assignments)>=max_assignments_per_worker :
+        html = '<center>You have completed the maximum number of HITs you can submit.</center><script>alert("We are sorry, but you have completed the maximum number of HITs you can submit.");</script>';
+        response = {
+            "info": {"id": None, "project_name": project_name, "template_name": "__maxassignments__" },
+            "html": html
+        } 
+        return JsonResponse(response)
+
+    if status=="__preview__":
 
         template_path = "./{}/preview.html".format(project_name)
         template = loader.get_template(template_path)
         response = {
-            "info": {"id": None, "project_name": project_name, "template_name": "__preview__" },
+            "info": {"id": None, "project_name": None, "template_name": "__preview__" },
             "html": template.render({}, request)
         } 
         return JsonResponse(response)
 
     else:
-
-        request_json = json.loads(request.body)
-        mturk_worker_id = request_json["mturk_worker_id"]
-        session_tab_id = request_json["session_tab_id"]
-        user_agent = request_json["user_agent"]
-        status = request_json["status"]
-        response = {}
 
         try:
             first_template = project_settings["DynamicCrowd"]["FirstTemplate"]
