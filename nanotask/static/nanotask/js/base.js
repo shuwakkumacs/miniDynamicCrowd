@@ -5,7 +5,8 @@ MTURK_WORKER_ID = turkGetParam("workerId", "TEST_WORKER");
 MTURK_ASSIGNMENT_ID = turkGetParam("assignmentId", "ASSIGNMENT_ID_NOT_AVAILABLE");
 MTURK_HIT_ID = turkGetParam("hitId", "TEST_DUMMY_HIT");
 
-TEST_MODE = MTURK_ASSIGNMENT_ID=="test" ? true : false;
+TEST_MODE = turkGetParam("production", false) ? false : true;
+PREVIEW_MODE = MTURK_ASSIGNMENT_ID=="ASSIGNMENT_ID_NOT_AVAILABLE" ? true : false;
 
 BASE_URL = window.location.origin+"/";
 
@@ -168,7 +169,7 @@ var loadNanotask = function() {
 
 
 
-    if(MTURK_ASSIGNMENT_ID=="ASSIGNMENT_ID_NOT_AVAILABLE") {
+    if(PREVIEW_MODE) {
 
         nanotaskStatus = "__preview__";
         $("#base-instruction-button").click();
@@ -214,6 +215,13 @@ var loadNanotask = function() {
 
 };
 
+var refreshPage = function(){
+    sessionStorage.removeItem("submittedNanotasks");
+    sessionStorage.setItem("nanotaskStatus", "first");
+    if(TEST_MODE) { setTimeout(function(){ window.location.reload(); }, 500); }
+    else $("#mturk_form").submit();
+};
+
 var submitHIT = function(){
     var data = {};
     data["mturk_assignment_id"] = MTURK_ASSIGNMENT_ID;
@@ -226,12 +234,7 @@ var submitHIT = function(){
         type: "POST",
         url: BASE_URL + "nanotask/assignment/save/",
         data: JSON.stringify(data),
-        success: function(){
-            sessionStorage.removeItem("submittedNanotasks");
-            sessionStorage.setItem("nanotaskStatus", "first");
-            if(TEST_MODE) { setTimeout(function(){ window.location.reload(); }, 500); }
-            else $("#mturk_form").submit();
-        },
+        success: refreshPage,
         error: function(){
             $("#mturk_form").submit();
         }
@@ -274,9 +277,19 @@ $("#base-instruction-shadow, #base-instruction-close-button").on("click", functi
 $("#base-instruction").on("click", function(e){
     e.stopPropagation();
 });
-
+$("#dev-btn-start-nanotasks").on("click",function(){
+    var workerId = $("#dev-worker-id").val();
+    if(workerId!="") window.location.href = "./?assignmentId=test&workerId="+workerId;
+});
+$("#dev-btn-reset").on("click", refreshPage);
 
 $(function(){
+    if(TEST_MODE) $("#top-dev-bar").show();
+    if(PREVIEW_MODE) {
+        $("#top-dev-bar-inner-preview").show();
+    } else {
+        $("#top-dev-bar-inner").show();
+    }
     loadNanotask();
 });
 

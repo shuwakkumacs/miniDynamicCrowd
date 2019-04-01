@@ -19,7 +19,7 @@ def run(context):
     client = context.get_mturk_client(is_sandbox)
     params = project_settings["AMT"]["HITParams"]
     params["Question"] = '<ExternalQuestion xmlns="http://mechanicalturk.amazonaws.com/AWSMechanicalTurkDataSchemas/2006-07-14/ExternalQuestion.xsd">'\
-                 + '<ExternalURL>{}/nanotask/base/{}/</ExternalURL>'.format(context.settings["BaseUrl"], context.project_name)\
+                 + '<ExternalURL>{}/nanotask/base/{}/?production=1</ExternalURL>'.format(context.settings["BaseUrl"], context.project_name)\
                  + '<FrameHeight>{}</FrameHeight>'.format(project_settings["AMT"]["FrameHeight"])\
                  + '</ExternalQuestion>'
     num_unsolved_answers = Ticket.objects.using(context.project_name).filter(mturk_worker_id=None).count()
