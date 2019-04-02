@@ -191,7 +191,7 @@ def load_nanotask(request, project_name):
             template_path = "./{}/{}.html".format(project_name, nanotask.template_name)
             template = loader.get_template(template_path)
             response.update({
-                "info": {"id": nanotask.id, "project_name": nanotask.project_name, "template_name": nanotask.template_name },
+                "info": {"id": nanotask.id, "project_name": project_name, "template_name": nanotask.template_name },
                 "html": template.render(media_data, request)
             })
             ret = JsonResponse(response)
