@@ -25,8 +25,9 @@ var randomSeed = function(){
     return r;
 };
 
-function getNanotaskAnswers(that){
+function getNanotaskAnswers(that, success, error){
     var answersJSON = {};
+    var errorNames = [];
 
     if($(that).attr("name")){
 
@@ -47,19 +48,26 @@ function getNanotaskAnswers(that){
         else if(ans.tagName=="SELECT")
             var type = "select";
 
-        if(ans.type in all_inputs) {
-            if(all_inputs[ans.type].indexOf(ans.name)==-1)
-                all_inputs[ans.type].push(ans.name);
+        var name = ans.name;
+        var required = $(ans).hasClass("nano-required");
+        if(type in all_inputs) {
+            if(all_inputs[type]["names"].indexOf(name)==-1) {
+                all_inputs[type]["names"].push(name);
+                all_inputs[type]["required"].push(required);
+            }
         } else {
-            all_inputs[ans.type] = [ans.name];
+            all_inputs[type] = {};
+            all_inputs[type]["names"] = [name];
+            all_inputs[type]["required"] = [required];
         }
 
     });
 
     for(var type in all_inputs){
-        for(var i in all_inputs[type]){
+        for(var i in all_inputs[type]["names"]){
 
-            var name = all_inputs[type][i];
+            var name = all_inputs[type]["names"][i];
+            var required = all_inputs[type]["required"][i];
 
             switch(type){
 
@@ -69,34 +77,37 @@ function getNanotaskAnswers(that){
                     $checked.each(function(j,checked){
                         answersJSON[name].push($(checked).val());
                     });
+                    if(required && answersJSON[name].length==0) errorNames.push(name);
                     break;
 
                 case "radio":
                     var $checked = $(`.nano-answer[type=radio][name=${name}]:checked`);
                     answersJSON[name] = $checked.val();
+                    if(required && typeof(answersJSON[name])==="undefined") errorNames.push(name);
                     break;
 
                 case "select":
-                    var $selected = $(`.nano-answer[type=select][name=${name}] option:selected`);
+                    var $selected = $(`select.nano-answer[name=${name}] option:selected`);
                     answersJSON[name] = $selected.val();
+                    if(required && typeof(answersJSON[name])==="undefined") errorNames.push(name);
                     break;
 
                 default:
                     answersJSON[name] = $(`.nano-answer[name=${name}]`).val();
+                    if(required && (typeof(answersJSON[name])==="undefined" || answersJSON[name]==="")) errorNames.push(name);
                     break;
             }
         }
     }
 
-    return answersJSON;
+    if(errorNames.length) error(errorNames);
+    else success(answersJSON);
 }
 
 
 var loadNanotask = function() {
 
     var afterNanotaskLoadHandler = function(nanotask){
-
-        console.log(nanotask.status, submittedNanotasks, nanotasksPerHIT);
 
         if(!nanotask.info)
             afterNanotaskLoadErrorHandler();
@@ -131,31 +142,42 @@ var loadNanotask = function() {
             else idsAll = JSON.parse(idsAllInputVal);
     
             $(".nano-submit").on("click", function(){
-                var secsElapsed = (new Date() - timeNanotaskStarted)/1000;
-                $("#base-nanotask").fadeOut("fast");
-                var answersJSON = getNanotaskAnswers(this);
+                getNanotaskAnswers(this, function(answersJSON){
+                    var secsElapsed = (new Date() - timeNanotaskStarted)/1000;
+                    $("#base-nanotask").fadeOut("fast");
+                    idsAll.push(nanotask.info.id);
+                    $("#nano-ids-all").val(JSON.stringify(idsAll));
 
-                idsAll.push(nanotask.info.id);
-                $("#nano-ids-all").val(JSON.stringify(idsAll));
-
-                data = {
-                    "id": nanotask.info.id,
-                    "sec": secsElapsed,
-                    "answer": answersJSON,
-                    "project_name": PROJECT_NAME,
-                    "status": nanotaskStatus
-                };
-                submitNanotask(data, function(){
-                    if(["first", "last"].indexOf(nanotaskStatus) == -1) { submittedNanotasks += 1; }
-                    if(nanotaskStatus=="first") nanotaskStatus = "";
-                    sessionStorage.setItem("submittedNanotasks", submittedNanotasks);
-                    sessionStorage.setItem("nanotaskStatus", nanotaskStatus);
-                    if(nanotaskStatus=="last") submitHIT();
-                    else loadNanotask();
-                }, function(){
-                    alert("We're sorry, an error occured on sending data --- no worries, this HIT will be submitted now and you will be paid for this :) Thank you for your cooperation!");
-    	        	submitHIT();
+                    data = {
+                        "id": nanotask.info.id,
+                        "sec": secsElapsed,
+                        "answer": answersJSON,
+                        "project_name": PROJECT_NAME,
+                        "status": nanotaskStatus
+                    };
+                    submitNanotask(data, function(){
+                        if(["first", "last"].indexOf(nanotaskStatus) == -1) { submittedNanotasks += 1; }
+                        if(nanotaskStatus=="first") nanotaskStatus = "";
+                        sessionStorage.setItem("submittedNanotasks", submittedNanotasks);
+                        sessionStorage.setItem("nanotaskStatus", nanotaskStatus);
+                        if(nanotaskStatus=="last") submitHIT();
+                        else loadNanotask();
+                    }, function(){
+                        alert("We're sorry, an error occured on sending data --- no worries, this HIT will be submitted now and you will be paid for this :) Thank you for your cooperation!");
+    	            	submitHIT();
+                    });
+                }, function(errorNames){
+                    var alertStr = "Please fill the required fields to submit this task:\n";
+                    for(var i in errorNames){
+                        var $elem = $(`*[name=${errorNames[i]}]`).eq(0);
+                        var alt = $elem.attr("alt");
+                        if(!alt) alt = $elem.attr("name");
+                        alertStr += ` - ${alt}\n`;
+                    }
+                    alert(alertStr);
+                    return false;
                 });
+
             });
         }
     };
