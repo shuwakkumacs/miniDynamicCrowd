@@ -15,7 +15,7 @@ def run(context):
     is_sandbox = args.production
 
     client = context.get_mturk_client(is_sandbox)
-    hits = HIT.objects.using(context.project_name).filter(project_name=context.project_name,is_sandbox=is_sandbox,time_expired=None).all()
+    hits = HIT.objects.using(context.project_name).filter(is_sandbox=is_sandbox,time_expired=None).all()
 
     for hit in hits:
         executor.submit(expire_hit,client,hit,context.project_name)

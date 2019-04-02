@@ -36,6 +36,6 @@ def run(context):
 def create_hit(client,project_name,is_sandbox,params):
     ret = client.create_hit(**params)
     mturk_hit_id = ret["HIT"]["HITId"]
-    hit = HIT(mturk_hit_id=mturk_hit_id,project_name=project_name,is_sandbox=is_sandbox)
+    hit = HIT(mturk_hit_id=mturk_hit_id,is_sandbox=is_sandbox)
     hit.save(using=project_name)
     print("created {}".format(mturk_hit_id))

@@ -12,13 +12,11 @@ class AMTAssignment(models.Model):
 
 class HIT(models.Model):
     mturk_hit_id = models.CharField(max_length=255)
-    project_name = models.CharField(max_length=255)
     is_sandbox = models.IntegerField()
     time_created = models.DateTimeField(auto_now_add=True)
     time_expired = models.DateTimeField(blank=True, null=True)
 
 class Nanotask(models.Model):
-    project_name = models.TextField(max_length=255)
     template_name = models.TextField(max_length=255)
     media_data = models.TextField(blank=True, default="{}")
     create_id = models.CharField(max_length=100)

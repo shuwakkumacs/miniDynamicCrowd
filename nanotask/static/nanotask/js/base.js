@@ -96,6 +96,8 @@ var loadNanotask = function() {
 
     var afterNanotaskLoadHandler = function(nanotask){
 
+        console.log(nanotask.status, submittedNanotasks, nanotasksPerHIT);
+
         if(!nanotask.info)
             afterNanotaskLoadErrorHandler();
 
