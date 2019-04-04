@@ -8,6 +8,14 @@ MTURK_GROUP_ID = document.referrer.match(/https:\/\/worker(sandbox)?.mturk.com\/
 
 TEST_MODE = turkGetParam("production", false) ? false : true;
 PREVIEW_MODE = MTURK_ASSIGNMENT_ID=="ASSIGNMENT_ID_NOT_AVAILABLE" ? true : false;
+  
+BASE_URL = window.location.origin+"/";
+
+nanotasksPerHIT = -1;
+submittedNanotasks = 0;
+nanotaskStatus = "first";
+
+timeNanotaskStarted = null;
 
 var checkVisit = function(){
     var visited = false;
@@ -15,7 +23,6 @@ var checkVisit = function(){
     var visitedIdsStr = sessionStorage.getItem("visitedIds");
     if(visitedIdsStr){
         visitedIds = visitedIdsStr.split(",");
-        console.log(visitedId, visitedIds);
         if(visitedIds.indexOf(visitedId) > -1) visited = true;
         if(!visited) {
             visitedIds.push(visitedId);
@@ -26,16 +33,7 @@ var checkVisit = function(){
     }
     return visited;
 };
-VISITED = checkVisit();
-   
-BASE_URL = window.location.origin+"/";
-
-nanotasksPerHIT = -1;
-submittedNanotasks = 0;
-nanotaskStatus = "first";
-
-timeNanotaskStarted = null;
-
+ 
 var randomSeed = function(){
     var l = 16;
     var c = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -211,7 +209,7 @@ var loadNanotask = function() {
     };
 
 
-    if(!VISITED)
+    if(!checkVisit())
         $("#base-instruction-button").click();
 
     if(PREVIEW_MODE) {
