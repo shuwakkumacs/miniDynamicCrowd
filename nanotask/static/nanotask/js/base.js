@@ -4,10 +4,30 @@ PROJECT_NAME = hrefSplit[hrefSplit.length-2];
 MTURK_WORKER_ID = turkGetParam("workerId", "TEST_WORKER");
 MTURK_ASSIGNMENT_ID = turkGetParam("assignmentId", "ASSIGNMENT_ID_NOT_AVAILABLE");
 MTURK_HIT_ID = turkGetParam("hitId", "TEST_DUMMY_HIT");
+MTURK_GROUP_ID = document.referrer.match(/https:\/\/worker(sandbox)?.mturk.com\/projects\//g) ? document.referrer.split("/")[4] : turkGetParam("groupId", "TEST_DUMMY_GROUP");
 
 TEST_MODE = turkGetParam("production", false) ? false : true;
 PREVIEW_MODE = MTURK_ASSIGNMENT_ID=="ASSIGNMENT_ID_NOT_AVAILABLE" ? true : false;
 
+var checkVisit = function(){
+    var visited = false;
+    var visitedId = MTURK_GROUP_ID+"-"+MTURK_WORKER_ID;
+    var visitedIdsStr = sessionStorage.getItem("visitedIds");
+    if(visitedIdsStr){
+        visitedIds = visitedIdsStr.split(",");
+        console.log(visitedId, visitedIds);
+        if(visitedIds.indexOf(visitedId) > -1) visited = true;
+        if(!visited) {
+            visitedIds.push(visitedId);
+            sessionStorage.setItem("visitedIds", visitedIds);
+        }
+    } else {
+       sessionStorage.setItem("visitedIds", visitedId);
+    }
+    return visited;
+};
+VISITED = checkVisit();
+   
 BASE_URL = window.location.origin+"/";
 
 nanotasksPerHIT = -1;
@@ -191,7 +211,8 @@ var loadNanotask = function() {
     };
 
 
-
+    if(!VISITED)
+        $("#base-instruction-button").click();
 
     if(PREVIEW_MODE) {
 
