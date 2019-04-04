@@ -134,13 +134,13 @@ var loadNanotask = function() {
             $("#base-nanotask").html(nanotask.html);
         }
 
-        else if(nanotask.status=="last" && submittedNanotasks<nanotasksPerHIT)
-            alert("Well done! There seem to be no more tasks available. Please give us an extra minute for a few survey questions. Thank you for your contribution!");
-
         else if(nanotask.status=="finish" || submittedNanotasks>nanotasksPerHIT)
             submitHIT();
 
         else {
+            if(nanotask.status=="last" && submittedNanotasks<nanotasksPerHIT)
+                alert("Well done! There seem to be no more tasks available. Please give us an extra minute for a few survey questions. Thank you for your contribution!");
+    
             nanotaskStatus = nanotask.status
             sessionStorage.setItem("nanotaskStatus", nanotaskStatus);
 
@@ -200,7 +200,7 @@ var loadNanotask = function() {
         }
     };
     
-    var afterNanotaskLoadErrorHandler = function(){
+    var afterNanotaskLoadErrorHandler = function(a,b,c){
         if(submittedNanotasks==0){
             noTaskAlert();
         } else {
@@ -208,17 +208,19 @@ var loadNanotask = function() {
         }
     };
 
+    var sessionTabId = null;
 
-    if(!checkVisit())
-        $("#base-instruction-button").click();
 
     if(PREVIEW_MODE) {
 
         nanotaskStatus = "__preview__";
         $("#base-instruction-button").click();
-        var sessionTabId = "";
+        sessionTabId = "";
+    }
 
-    } else {
+    else {
+
+        if(!checkVisit()) $("#base-instruction-button").click();
 
         nanotasksPerHIT = $("#nanotasks-per-hit").val();
 
@@ -230,10 +232,10 @@ var loadNanotask = function() {
         if(nanotaskStatus===null) nanotaskStatus = "first";
 
         if(!sessionStorage.tabID) {
-            var sessionTabId = randomSeed();
+            sessionTabId = randomSeed();
             sessionStorage.tabID = sessionTabId;
         } else {
-            var sessionTabId = sessionStorage.tabID;
+            sessionTabId = sessionStorage.tabID;
         }
 
         if(typeof(nanotaskStatus)==="undefined") nanotaskStatus = "first";

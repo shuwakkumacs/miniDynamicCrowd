@@ -34,7 +34,10 @@ def run(context):
         #create_hit(client,context.project_name,is_sandbox,params)
 
 def create_hit(client,project_name,is_sandbox,params):
-    ret = client.create_hit(**params)
+    try:
+        ret = client.create_hit(**params)
+    except Exception as e:
+        print(e)
     mturk_hit_id = ret["HIT"]["HITId"]
     hit = HIT(mturk_hit_id=mturk_hit_id,is_sandbox=is_sandbox)
     hit.save(using=project_name)

@@ -25,6 +25,5 @@ def run(context):
         for name in ['id','create_id','template_name']:
             if eval(name):
                 args[name] = eval(name)
-        args["project_name"] = context.project_name
         # DELETES ALL FOREIGN OBJECTS!!!
         nanotasks = Nanotask.objects.using(context.project_name).filter(**args).delete()

@@ -51,7 +51,7 @@ class Context:
             settings = json.load(f)
         with transaction.atomic():
             for row in tqdm(generator, total=total):
-                nanotask = Nanotask(project_name=self.project_name, template_name=template_name, media_data=json.dumps(row), create_id=create_id)
+                nanotask = Nanotask(template_name=template_name, media_data=json.dumps(row), create_id=create_id)
                 nanotask.save(using=self.project_name)
                 for i in range(settings["DynamicCrowd"]["AnswersPerNanotask"]):
                     answer = Ticket(nanotask=nanotask)
