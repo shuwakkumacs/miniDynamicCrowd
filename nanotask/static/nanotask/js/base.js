@@ -304,7 +304,7 @@ var noMoreTaskAlert = function(callback){
 };
 
 var noTaskAlert = function(){
-    alert("We're sorry but there are currently no tasks available :( Please try again later. Thank you!");
+    alert("We're sorry but there are currently no tasks available, so please return this HIT. :( Thank you for your cooperation!");
 };
 
 
