@@ -8,6 +8,10 @@ from django.db import transaction, connection
 from django.utils import timezone
 from .models import *
 import json
+from django.forms.models import model_to_dict
+
+import boto3
+import concurrent.futures
 
 project_settings_all = {}
 
@@ -248,3 +252,52 @@ def update_completed_hit(request):
         cursor.execute(sql)
     connection.close()
     return JsonResponse({})
+
+@csrf_exempt
+def get_assignments(request, project_name):
+    assignments = AMTAssignment.objects.using(project_name).values()
+    assignments_list = [a for a in assignments]
+    return JsonResponse(assignments_list, safe=False)
+
+@csrf_exempt
+def mturk_operation(request, operation_name):
+    def get_mturk_client(is_sandbox):
+        with open("/root/DynamicCrowd/settings/global.json") as f:
+            settings = json.load(f)
+
+        if is_sandbox:
+            endpoint_url = "https://mturk-requester-sandbox.us-east-1.amazonaws.com"
+        else:
+            endpoint_url = "https://mturk-requester.us-east-1.amazonaws.com"
+        
+        return boto3.client('mturk',
+                    aws_access_key_id = settings["AMT"]["Credentials"]["AWSAccessKeyId"],
+                    aws_secret_access_key = settings["AMT"]["Credentials"]["AWSSecretAccessKey"],
+                    region_name = "us-east-1",
+                    endpoint_url = endpoint_url
+        )
+
+    def exec_operation(client, operation_name, **kwargs):
+        exec_str = "result = client.{}(**kwargs)".format(operation_name)
+        try:
+            exec(exec_str)
+        except Exception as e:
+            result = str(e)
+        return result
+
+    client = get_mturk_client(True) # sandbox
+    client = get_mturk_client(False) # production
+    request_json = json.loads(request.body)
+    params_list = request_json["params_list"]
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        futures = []
+        for params in params_list:
+            futures.append(executor.submit(exec_operation, client, operation_name, **params))
+
+    return JsonResponse([f.result() for f in futures], safe=False)
+
+@csrf_exempt
+def view_manage_hits(request, project_name):
+    template_path = "./console/manage_hits.html".format()
+    return HttpResponse(loader.get_template(template_path).render({}, request))

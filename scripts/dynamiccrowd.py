@@ -53,9 +53,9 @@ class Context:
             for row in tqdm(generator, total=total):
                 nanotask = Nanotask(template_name=template_name, media_data=json.dumps(row), create_id=create_id)
                 nanotask.save(using=self.project_name)
-                for i in range(settings["DynamicCrowd"]["AnswersPerNanotask"]):
-                    answer = Ticket(nanotask=nanotask)
-                    answer.save(using=self.project_name)
+                ticket = Ticket(nanotask=nanotask)
+                tickets = [ticket for i in range(settings["DynamicCrowd"]["AnswersPerNanotask"])]
+                Ticket.objects.using(self.project_name).bulk_create(tickets)
 
     def export_answers(self, callback):
         for row in Ticket.objects.using(self.project_name).filter(nanotask__project_name=self.project_name):
