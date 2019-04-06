@@ -278,14 +278,17 @@ def mturk_operation(request, operation_name):
         )
 
     def exec_operation(client, operation_name, **kwargs):
-        exec_str = "result = client.{}(**kwargs)".format(operation_name)
+        exec_str = "client.{}(**kwargs)".format(operation_name)
         try:
             exec(exec_str)
         except Exception as e:
             result = str(e)
-        return result
+        if "result" in locals():
+            return {"status": "error", "data": kwargs, "message": result}
+        else:
+            return {"status": "success", "data": kwargs}
 
-    client = get_mturk_client(True) # sandbox
+    #client = get_mturk_client(True) # sandbox
     client = get_mturk_client(False) # production
     request_json = json.loads(request.body)
     params_list = request_json["params_list"]
@@ -295,7 +298,20 @@ def mturk_operation(request, operation_name):
         for params in params_list:
             futures.append(executor.submit(exec_operation, client, operation_name, **params))
 
-    return JsonResponse([f.result() for f in futures], safe=False)
+    results = [f.result() for f in futures]
+
+    return JsonResponse(results, safe=False)
+
+@csrf_exempt
+def update_assignment_status(request, project_name, status):
+    request_json = json.loads(request.body)
+    assignment_ids = request_json["ids"]
+
+    sql = "UPDATE {0}.nanotask_amtassignment SET status='{1}' WHERE mturk_assignment_id IN ({2});".format(project_name, status, ",".join(["'{}'".format(aid) for aid in assignment_ids]))
+    print(sql)
+    with connection.cursor() as cursor:
+        cursor.execute(sql)
+    return JsonResponse({})
 
 @csrf_exempt
 def view_manage_hits(request, project_name):
