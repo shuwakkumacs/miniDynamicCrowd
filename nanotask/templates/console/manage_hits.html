@@ -1,0 +1,236 @@
+<html>
+<head>
+	<script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+<style>
+#table-assignments {
+    width: 100%;
+}
+#table-assignments th { cursor: pointer; }
+#table-assignments th.asc { border-top: 5px solid #dee2e6; }
+#table-assignments th.desc { border-bottom: 5px solid #dee2e6; }
+.datarow-checked { background-color: #d0e9f7 !important; }
+.datarow-approved { background-color: #c0ffc8 !important; }
+.datarow-rejected { background-color: #ffd5d5 !important; }
+#header {
+    width: 100%;
+}
+#header-buttons {
+    float: right;
+}
+#header-buttons>button, #header-buttons>input {
+    float: right;
+    margin: 5px;
+    box-sizing: border-box;
+}
+.clear {
+    clear: both;
+}
+</style>
+<body>
+<div id="header">
+    <div id="header-buttons">
+        <!--<button type="button" name="reject_and_block" class="btn btn-danger" />Reject & Block</button>-->
+        <button type="button" name="create_worker_block" class="btn btn-warning" />Block Workers</button>
+        <button type="button" name="reject_assignment" class="btn btn-danger" />Reject Assignments</button>
+        <button type="button" name="approve_assignment" class="btn btn-primary" />Approve Assignments</button>
+        <input type="button" id="btn_pasted_worker_ids" value="Check workers by list">
+        <input type="text" id="pasted_worker_ids" />
+        <div class="clear"></div>
+    </div>
+    <div class="clear"></div>
+</div>
+<table id="table-assignments" class="table table-hover">
+</table>
+<input type="hidden" id="assignmentsdata" value="" />
+</body>
+<script>
+    var parsedURL = window.location.href.split("/")
+    var PROJECT_NAME = parsedURL[parsedURL.length-2];
+    var sortcol = "";
+    var sortorder = "asc";
+
+    var showAssignmentsTable = function(data, checkedIds){
+        var columns = ["id","mturk_assignment_id","mturk_hit_id","mturk_worker_id","time_created", "status"];
+        if($("#table-assignments .headerrow").length) $("#table-assignments .datarow").remove();
+        else {
+            var headerRow = '<tr class="headerrow"><td></td>';
+            for(var i in columns) headerRow += `<th name="${columns[i]}">${columns[i]}</th>`;
+            headerRow += "</tr>";
+            $("#table-assignments").append(headerRow);
+        }
+        
+        for(var i in data){
+            var each = data[i];
+            var status = each["status"];
+            if(status=="approved" || status=="rejected")
+                var row = `<tr class="datarow datarow-${status}"><td><input type="checkbox" name="checkedId" value="${each.id}" /></td>`;
+            else
+                var row = `<tr class="datarow"><td><input type="checkbox" name="checkedId" value="${each.id}" /></td>`;
+            for(var j in columns) row += `<td>${each[columns[j]]}</td>`;
+            row += "</tr>";
+            $("#table-assignments").append(row);
+        }
+        if(checkedIds) recheckIds(checkedIds);
+
+        $(".datarow").on("click", function(){
+            var $checkbox = $(this).find("input[type=checkbox]");
+            if($checkbox.prop("checked")) {
+                $checkbox.prop("checked",false);
+                $(this).removeClass("datarow-checked");
+            }
+            else {
+                $checkbox.prop("checked",true);
+                $(this).addClass("datarow-checked");
+            }
+        });
+    };
+
+    var getCheckedIds = function(){
+        var $checks = $("input[type=checkbox][name=checkedId]:checked");
+        var checkedIds = [];
+        $checks.each(function(i, check){
+            checkedIds.push(check.value);
+        });
+        return checkedIds;
+    };
+
+    var recheckIds = function(checkedIds){
+        for(var i in checkedIds) {
+            var $checkbox = $(`input[type=checkbox][name=checkedId][value=${checkedIds[i]}]`)
+            $checkbox.prop("checked",true);
+            $checkbox.parent().parent().addClass("datarow-checked");
+        }
+    };
+
+    var execMTurkAPI = function(operation, sendData, callback){
+        $.post({
+            "url": `/nanotask/mturkapi/${operation}/`,
+            "data": JSON.stringify(sendData)
+        }).then(function(data){
+            if(callback) callback(data);
+        });
+    };
+
+    var updateAssignmentStatus = function(s, ids){
+        $.post({
+            "url": `/nanotask/assignment/update/${PROJECT_NAME}/${s}/`,
+            "data": JSON.stringify({"ids": ids})
+        }).then(function(data){
+            console.log(data);
+        });
+    };
+
+    $.get({
+        "url": `/nanotask/data/assignments/${PROJECT_NAME}/`,
+    }).then(function(data){
+        var dataStr = JSON.stringify(data);
+        $("#assignmentsdata").val(dataStr);
+        showAssignmentsTable(data);
+
+        $("#table-assignments th").on("click", function(){
+            var checkedIds = getCheckedIds();
+            var colname = $(this).attr("name");
+            $("#table-assignments th").removeClass("asc").removeClass("desc");
+            if(colname==sortcol) sortorder = sortorder=="asc" ? "desc" : "asc";
+            else sortorder = "asc";
+            sortcol = colname;
+            $(`#table-assignments th[name=${sortcol}]`).addClass(sortorder);
+
+            var data = JSON.parse($("#assignmentsdata").val());
+            if(sortorder=="asc") data.sort((a, b) => (a[colname] > b[colname]) ? 1 : -1)
+            else if(sortorder=="desc") data.sort((a, b) => (a[colname] < b[colname]) ? 1 : -1)
+            showAssignmentsTable(data, checkedIds);
+        });
+
+    });
+
+    $("#header-buttons button").on("click", function(){
+        var checkedIds = getCheckedIds();
+        var operation = $(this).attr("name");
+        var data = JSON.parse($("#assignmentsdata").val());
+        var recordIds = [];
+        var assignmentIds = [];
+        var workerIds = [];
+        var hitIds = [];
+        for(var i in checkedIds) {
+            for(var j in data) {
+                if(data[j]["id"]==checkedIds[i]) {
+                    recordIds.push(data[j]["id"]);
+                    assignmentIds.push(data[j]["mturk_assignment_id"]);
+                    workerIds.push(data[j]["mturk_worker_id"]);
+                    hitIds.push(data[j]["mturk_hit_id"]);
+                }
+            }
+        }
+        var sendData = {
+            "approve": [],
+            "reject": [],
+            "block": []
+        };
+        var message = "Ignoring instruction / random answer(s)"
+        for(var i in recordIds) {
+            sendData["approve"].push({"AssignmentId": assignmentIds[i]});
+            sendData["reject"].push({"AssignmentId": assignmentIds[i], "RequesterFeedback": message});
+            sendData["block"].push({"WorkerId": workerIds[i], "Reason": message});
+        }
+        if(confirm(`Are you sure?\n\nExecuting: ${operation}\nTarget Assignment IDs:\n${checkedIds}`)){
+            switch(operation){
+                case "approve_assignment":
+                    execMTurkAPI(operation, {"params_list": sendData["approve"]}, function(data){
+                        var ids = [];
+                        for(var i in data){
+                            var d = data[i];
+                            if(d.status=="success") ids.push(d.data.AssignmentId);
+                            else if(d.status=="error") console.log(`${d.data.AssignmentId}: ${d.message}`);
+                        }
+                        if(ids.length) updateAssignmentStatus("approved", ids);
+                    });
+                    break;
+                case "reject_assignment":
+                    execMTurkAPI(operation, {"params_list": sendData["reject"]}, function(data){
+                        var ids = [];
+                        for(var i in data){
+                            var d = data[i];
+                            if(d.status=="success") ids.push(d.data.AssignmentId);
+                            else if(d.status=="error") console.log(`${d.data.AssignmentId}: ${d.message}`);
+                        }
+                        console.log(ids);
+                        if(ids.length) updateAssignmentStatus("rejected", ids);
+                    });
+                    break;
+                case "create_worker_block":
+                    execMTurkAPI(operation, {"params_list": sendData["block"]}, function(data){
+                        for(var i in data){
+                            var d = data[i];
+                            if(d.status=="success") console.log(`Blocked ${d.data.WorkerId}`);
+                            else if(d.status=="error") console.log(`${d.data.WorkerId}: ${d.message}`);
+                        }
+                    });
+                //case "reject_and_block":
+                //    execMTurkAPI("reject_assignment", {"params_list": sendData["reject"]},function(){
+                //        execMTurkAPI("create_worker_block", {"params_list": sendData["block"]});
+                //    });
+                //    break;
+            }
+        } else { return false; }
+    });
+
+    $("#btn_pasted_worker_ids").on("click", function(){
+        var listStr = $("#pasted_worker_ids").val();
+        var list = JSON.parse(listStr.replace(/'/g, "\""));
+        var assignmentsData = JSON.parse($("#assignmentsdata").val());
+        var ids = [];
+        for(var i in assignmentsData) {
+            var data = assignmentsData[i];
+            for(var j in list){
+                if(list[j]==data["mturk_worker_id"]) ids.push(data["id"]);
+            }
+        }
+        console.log(ids);
+        if(ids.length) recheckIds(ids);
+    });
+
+</script>
+</html>
