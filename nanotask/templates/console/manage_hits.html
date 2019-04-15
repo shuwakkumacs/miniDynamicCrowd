@@ -24,6 +24,22 @@
     margin: 5px;
     box-sizing: border-box;
 }
+.comment-wrapper {
+    position: relative;
+    width: 100%;
+}
+.comment-window {
+    position: absolute;
+    right: 0;
+    bottom: 30px;
+    width: 200px;
+    font-size: 0.8em;
+    background-color: white;
+    border-radius: 3px;
+    display: none;
+    min-height: 30px;
+}
+
 .clear {
     clear: both;
 }
@@ -68,7 +84,9 @@
                 var row = `<tr class="datarow datarow-${status}"><td><input type="checkbox" name="checkedId" value="${each.id}" /></td>`;
             else
                 var row = `<tr class="datarow"><td><input type="checkbox" name="checkedId" value="${each.id}" /></td>`;
-            for(var j in columns) row += `<td>${each[columns[j]]}</td>`;
+            for(var j in columns) row += `<td class="td-${columns[j]}">${each[columns[j]]}</td>`;
+            var comment = each.comment ? each.comment : "";
+            row += `<td class="td-comment"><div class="comment-wrapper"><input type="text" name="comment" value="${each.comment}" /><div class="comment-window">${each.comment}</div></td>`;
             row += "</tr>";
             $("#table-assignments").append(row);
         }
@@ -84,6 +102,26 @@
                 $checkbox.prop("checked",true);
                 $(this).addClass("datarow-checked");
             }
+        });
+
+        $("input[name=comment]").on("focusout",function(){
+            var $parentTr = $(this).parent().parent().parent();
+            var $window = $(this).parent().find(".comment-window");
+            var id = $parentTr.find(".td-id").html();
+            var comment = $(this).val();
+            $.post({
+                "url": `/nanotask/assignment/update_comment/${PROJECT_NAME}/`,
+                "data": JSON.stringify({"id": id, "comment": comment}),
+                "success": function(){
+                    $window.html(comment);
+                }
+            });
+        }).on("mouseenter",function(){
+            var $window = $(this).parent().find(".comment-window");
+            $window.show();
+        }).on("mouseleave",function(){
+            var $window = $(this).parent().find(".comment-window");
+            $window.hide();
         });
     };
 
@@ -145,6 +183,7 @@
         });
 
     });
+
 
     $("#header-buttons button").on("click", function(){
         var checkedIds = getCheckedIds();

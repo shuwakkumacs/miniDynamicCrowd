@@ -10,6 +10,7 @@ class AMTAssignment(models.Model):
     time_created = models.DateTimeField(auto_now_add=True)
     time_bonus_sent = models.DateTimeField(blank=True, null=True)
     status = models.CharField(max_length=255, blank=True, null=True)
+    comment = models.TextField(blank=True, default="")
 
 class HIT(models.Model):
     mturk_hit_id = models.CharField(max_length=255)

@@ -63,7 +63,7 @@ def load_nanotask(request, project_name):
         cursor.execute(sql)
 
     def release_nanotask(cursor,nanotask):
-        sql = "update {0}.nanotask_ticket set mturk_worker_id='', session_tab_id='', user_agent='', time_assigned=NULL where nanotask_id='{1}';".format(project_name, nanotask.id)
+        sql = "update {0}.nanotask_ticket set mturk_worker_id=null, session_tab_id='', user_agent='', time_assigned=NULL where nanotask_id='{1}' and mturk_worker_id='{2}' and session_tab_id='{3}';".format(project_name, nanotask.id, mturk_worker_id, session_tab_id)
         cursor.execute(sql)
 
 
@@ -311,6 +311,16 @@ def update_assignment_status(request, project_name, status):
     print(sql)
     with connection.cursor() as cursor:
         cursor.execute(sql)
+    return JsonResponse({})
+
+@csrf_exempt
+def update_assignment_comment(request, project_name):
+    request_json = json.loads(request.body)
+    id = request_json["id"]
+    comment = request_json["comment"]
+    assignment = AMTAssignment.objects.using(project_name).filter(id=id).first()
+    assignment.comment = comment
+    assignment.save()
     return JsonResponse({})
 
 @csrf_exempt
