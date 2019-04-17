@@ -7,6 +7,7 @@ from django.db import transaction
 
 def run(context):
     context.parser.add_argument("-n", "--number", help="manually-set number of HITs to create", default=None)
+    context.parser.add_argument("--url", help="Custom URL", default=None)
     context.parser.add_argument("--production", help="Production mode (non-sandbox)", action="store_false")
     args = context.parser.parse_args()
     is_sandbox = args.production
@@ -18,8 +19,12 @@ def run(context):
     
     client = context.get_mturk_client(is_sandbox)
     params = project_settings["AMT"]["HITParams"]
+    if args.url:
+        url = args.url
+    else:
+        url = "{}/nanotask/base/{}/?production=1".format(context.settings["BaseUrl"], context.project_name)
     params["Question"] = '<ExternalQuestion xmlns="http://mechanicalturk.amazonaws.com/AWSMechanicalTurkDataSchemas/2006-07-14/ExternalQuestion.xsd">'\
-                 + '<ExternalURL>{}/nanotask/base/{}/?production=1</ExternalURL>'.format(context.settings["BaseUrl"], context.project_name)\
+                 + '<ExternalURL>{}</ExternalURL>'.format(url)\
                  + '<FrameHeight>{}</FrameHeight>'.format(project_settings["AMT"]["FrameHeight"])\
                  + '</ExternalQuestion>'
     num_unsolved_answers = Ticket.objects.using(context.project_name).filter(mturk_worker_id=None).count()

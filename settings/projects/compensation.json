@@ -6,16 +6,17 @@
 			"LifetimeInSeconds": 360000,
 			"AutoApprovalDelayInSeconds": 259200,
 			"AssignmentDurationInSeconds": 36000,
-			"Reward": "1.50",
+			"Reward": "0.00",
 			"Title": "Compensation HIT",
 			"Keywords": "compensation",
 			"Description": "This is a HIT for compensating our notified workers. You cannot submit this HIT unless you get an invitation from us."
 		}
 	},
 	"DynamicCrowd": {
-        "Title": "Compensation HIT (notified workers only)",
+        "Title": "Compensation HIT (NOTIFIED WORKERS ONLY)",
 		"NanotasksPerHIT": 1,
 		"AnswersPerNanotask": 50,
-        "WhiteWorkersList": [""]
+        "MaxAssignmentsPerWorker": 1,
+        "WhiteWorkersList": ["A3QJ14Y7N8VQ42","AY00KKUQFU9O8","A2GDE2EZTHMC4V"]
 	}
 }

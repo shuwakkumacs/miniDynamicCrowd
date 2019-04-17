@@ -130,7 +130,7 @@ var loadNanotask = function() {
         if(!nanotask.info)
             afterNanotaskLoadErrorHandler();
 
-        else if(["__preview__","__maxassignments__"].indexOf(nanotask.info.template_name) > -1){
+        else if(["__preview__","__maxassignments__","__excluded__"].indexOf(nanotask.info.template_name) > -1){
             $("#base-nanotask").html(nanotask.html);
         }
 
@@ -229,7 +229,7 @@ var loadNanotask = function() {
 
         nanotaskStatus = sessionStorage.getItem("nanotaskStatus");
 
-        if(nanotaskStatus===null) nanotaskStatus = "first";
+        if(nanotaskStatus===null || typeof(nanotaskStatus)==="undefined" || nanotaskStatus==="undefined") nanotaskStatus = "first";
 
         if(!sessionStorage.tabID) {
             sessionTabId = randomSeed();

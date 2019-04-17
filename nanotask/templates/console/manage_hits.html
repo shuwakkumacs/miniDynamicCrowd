@@ -210,7 +210,7 @@
         };
         var message = "Ignoring instruction / random answer(s)"
         for(var i in recordIds) {
-            sendData["approve"].push({"AssignmentId": assignmentIds[i]});
+            sendData["approve"].push({"AssignmentId": assignmentIds[i], "OverrideRejection": true});
             sendData["reject"].push({"AssignmentId": assignmentIds[i], "RequesterFeedback": message});
             sendData["block"].push({"WorkerId": workerIds[i], "Reason": message});
         }

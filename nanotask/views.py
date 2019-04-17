@@ -90,6 +90,15 @@ def load_nanotask(request, project_name):
 
     else:
 
+        if "WhiteWorkersList" in project_settings["DynamicCrowd"]:
+            if mturk_worker_id not in project_settings["DynamicCrowd"]["WhiteWorkersList"]:
+                html = '<center>You are not eligible to work on this HIT.</center><script>alert("We are sorry, but you are not in our list of workers who can work on this HIT. Please return this HIT.");</script>';
+                response = {
+                    "info": {"id": None, "project_name": project_name, "template_name": "__excluded__" },
+                    "html": html
+                } 
+                return JsonResponse(response)
+
         assignments = AMTAssignment.objects.using(project_name).filter(mturk_worker_id=mturk_worker_id).all()
         try:
             max_assignments_per_worker = project_settings["DynamicCrowd"]["MaxAssignmentsPerWorker"]
