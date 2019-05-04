@@ -147,14 +147,21 @@ def load_nanotask(request, project_name):
                     nanotask_main = get_reserved_nanotask([first_template,last_template],"exclude")
                     if first_template:
                         if nanotask_main:
-                            reserve_nanotask(cursor, template_query_first)
-                            nanotask_first = get_reserved_nanotask([first_template],"include")
-                            if nanotask_first:
-                                nanotask = nanotask_first
-                                response["status"] = "first"
+                            first_answered = Nanotask.objects.using(project_name).filter(ticket__mturk_worker_id=mturk_worker_id,
+                                                                                         ticket__time_submitted__isnull=False,
+                                                                                         template_name=first_template).order_by('id').first()
+                            if first_answered:
+                                nanotask = nanotask_main
+                                response["status"] = ""
                             else:
-                                release_nanotask(cursor,nanotask_main)
-                                nanotask = None
+                                reserve_nanotask(cursor, template_query_first)
+                                nanotask_first = get_reserved_nanotask([first_template],"include")
+                                if nanotask_first:
+                                    nanotask = nanotask_first
+                                    response["status"] = "first"
+                                else:
+                                    release_nanotask(cursor,nanotask_main)
+                                    nanotask = None
                         else:
                             nanotask = None
                     else:
@@ -170,17 +177,27 @@ def load_nanotask(request, project_name):
 
                 def reserve_nanotask_last(response):
                     if last_template:
-                        reserve_nanotask(cursor, template_query_last)
-                        nanotask_last = get_reserved_nanotask([last_template],"include")
-                        if nanotask_last:
-                            nanotask = nanotask_last
-                            response["status"] = "last"
-                        else:
+                        last_answered = Nanotask.objects.using(project_name).filter(ticket__mturk_worker_id=mturk_worker_id,
+                                                                                    ticket__time_submitted__isnull=False,
+                                                                                    template_name=last_template).order_by('id').first();
+                        if last_answered:
+                            nanotask = None
                             response["status"] = "finish"
+                            response["info"] = "dummy"
+                        else:
+                            reserve_nanotask(cursor, template_query_last)
+                            nanotask_last = get_reserved_nanotask([last_template],"include")
+                            if nanotask_last:
+                                nanotask = nanotask_last
+                                response["status"] = "last"
+                            else:
+                                nanotask = None
+                                response["status"] = "finish"
                     else:
                         nanotask = None
                         response["status"] = "finish"
                         response["info"] = "dummy"
+                    print(response)
                     return nanotask, response
 
                 if status=="first": 
