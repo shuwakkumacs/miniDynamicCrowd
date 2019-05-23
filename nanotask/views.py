@@ -59,7 +59,7 @@ def load_nanotask(request, project_name):
                                                                ticket__time_submitted=None).order_by('id').first();
 
     def reserve_nanotask(cursor, template_query):
-        sql = "update {1}.nanotask_ticket set mturk_worker_id='{0}', session_tab_id='{2}', user_agent='{3}', time_assigned='{5}' where mturk_worker_id is null and nanotask_id not in ( select nanotask_id from ( select distinct nanotask_id from {1}.nanotask_ticket as a inner join {1}.nanotask_nanotask as n on a.nanotask_id=n.id where {4}(a.mturk_worker_id='{0}')) as tmp) order by nanotask_id asc, mturk_worker_id desc limit 1;".format(mturk_worker_id, project_name, session_tab_id, user_agent, template_query, timezone.now())
+        sql = "update {1}.nanotask_ticket set mturk_worker_id='{0}', session_tab_id='{2}', user_agent='{3}', time_assigned='{5}' where mturk_worker_id is null and instance_id not in ( select instance_id from ( select distinct a.instance_id from {1}.nanotask_ticket as a inner join {1}.nanotask_nanotask as n on a.nanotask_id=n.id where {4}(a.mturk_worker_id='{0}')) as tmp) order by nanotask_id asc, mturk_worker_id desc limit 1;".format(mturk_worker_id, project_name, session_tab_id, user_agent, template_query, timezone.now())
         cursor.execute(sql)
 
     def release_nanotask(cursor,nanotask):

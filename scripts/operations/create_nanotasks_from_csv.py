@@ -13,10 +13,12 @@ def run(context):
         reader = csv.reader(f, delimiter=",", quotechar="'")
         columns = next(reader)
         def generate():
+            idx = 0
             for row in reader:
                 media_data = {}
                 for i,col in enumerate(columns):
                     media_data[col] = row[i]
-                yield media_data
-        context.save_nanotasks(template_name, generate())
+                yield idx, media_data
+                idx += 1
+        context.save_nanotasks(template_name, csv_filename.split(".")[0], generate())
 

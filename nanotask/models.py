@@ -22,6 +22,7 @@ class Nanotask(models.Model):
     template_name = models.TextField(max_length=255)
     media_data = models.TextField(blank=True, default="{}")
     create_id = models.CharField(max_length=100)
+    instance_id = models.CharField(max_length=100)
     time_created = models.DateTimeField(auto_now_add=True)
 
 class Ticket(models.Model):
@@ -34,6 +35,7 @@ class Ticket(models.Model):
     time_submitted = models.DateTimeField(blank=True, null=True)
     working_time = models.FloatField(default=0.0)
     user_agent = models.CharField(max_length=255)
+    instance_id = models.CharField(max_length=100)
 
 class Answer(models.Model):
     ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE)
