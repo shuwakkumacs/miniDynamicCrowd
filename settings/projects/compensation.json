@@ -17,6 +17,6 @@
 		"NanotasksPerHIT": 1,
 		"AnswersPerNanotask": 50,
         "MaxAssignmentsPerWorker": 1,
-        "WhiteWorkersList": ["A3QJ14Y7N8VQ42","AY00KKUQFU9O8","A2GDE2EZTHMC4V"]
+        "WhiteWorkersList": ["WorkerID1","WorkerID2","WorkerID3"]
 	}
 }

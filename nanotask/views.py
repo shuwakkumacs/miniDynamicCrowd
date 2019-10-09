@@ -59,7 +59,8 @@ def load_nanotask(request, project_name):
                                                                ticket__time_submitted=None).order_by('id').first();
 
     def reserve_nanotask(cursor, template_query):
-        sql = "update {1}.nanotask_ticket set mturk_worker_id='{0}', session_tab_id='{2}', user_agent='{3}', time_assigned='{5}' where mturk_worker_id is null and instance_id not in ( select instance_id from ( select distinct a.instance_id from {1}.nanotask_ticket as a inner join {1}.nanotask_nanotask as n on a.nanotask_id=n.id where {4}(a.mturk_worker_id='{0}')) as tmp) order by nanotask_id asc, mturk_worker_id desc limit 1;".format(mturk_worker_id, project_name, session_tab_id, user_agent, template_query, timezone.now())
+        #sql = "update {1}.nanotask_ticket set mturk_worker_id='{0}', session_tab_id='{2}', user_agent='{3}', time_assigned='{5}' where mturk_worker_id is null and instance_id not in ( select instance_id from ( select distinct a.instance_id from {1}.nanotask_ticket as a inner join {1}.nanotask_nanotask as n on a.nanotask_id=n.id where {4}(a.mturk_worker_id='{0}')) as tmp) order by nanotask_id asc, mturk_worker_id desc limit 1;".format(mturk_worker_id, project_name, session_tab_id, user_agent, template_query, timezone.now())
+        sql = "update {1}.nanotask_ticket set mturk_worker_id='{0}', session_tab_id='{2}', user_agent='{3}', time_assigned='{5}' where mturk_worker_id is null and instance_id not in ( select instance_id from ( select distinct a.instance_id from {1}.nanotask_ticket as a inner join {1}.nanotask_nanotask as n on a.nanotask_id=n.id where {4}(a.mturk_worker_id='{0}')) as tmp) order by rand() limit 1;".format(mturk_worker_id, project_name, session_tab_id, user_agent, template_query, timezone.now())
         cursor.execute(sql)
 
     def release_nanotask(cursor,nanotask):
@@ -83,7 +84,8 @@ def load_nanotask(request, project_name):
         template_path = "./{}/preview.html".format(project_name)
         template = loader.get_template(template_path)
         response = {
-            "info": {"id": None, "project_name": None, "template_name": "__preview__" },
+            "msg": "preview",
+            "info": {"id": None, "project_name": None, "template_name": None },
             "html": template.render({}, request)
         } 
         return JsonResponse(response)
@@ -94,7 +96,8 @@ def load_nanotask(request, project_name):
             if mturk_worker_id not in project_settings["DynamicCrowd"]["WhiteWorkersList"]:
                 html = '<center>You are not eligible to work on this HIT.</center><script>alert("We are sorry, but you are not in our list of workers who can work on this HIT. Please return this HIT.");</script>';
                 response = {
-                    "info": {"id": None, "project_name": project_name, "template_name": "__excluded__" },
+                    "msg": "excluded",
+                    "info": {"id": None, "project_name": project_name, "template_name": None },
                     "html": html
                 } 
                 return JsonResponse(response)
@@ -106,9 +109,10 @@ def load_nanotask(request, project_name):
             max_assignments_per_worker = 9999999
 
         if len(assignments)>=max_assignments_per_worker :
-            html = '<center>You have completed the maximum number of HITs you can submit.</center><script>alert("We are sorry, but you have completed the maximum number of HITs you can submit.");</script>';
+            html = '<center>You have completed the maximum number of HITs you can submit.</center><script>alert("We are sorry, but seems like you have completed the maximum number of HITs you can submit (or you might have done our task before). Please return this HIT.");</script>';
             response = {
-                "info": {"id": None, "project_name": project_name, "template_name": "__maxassignments__" },
+                "msg": "maxassignments",
+                "info": {"id": None, "project_name": project_name, "template_name": None },
                 "html": html
             } 
             return JsonResponse(response)
@@ -189,15 +193,16 @@ def load_nanotask(request, project_name):
                             nanotask_last = get_reserved_nanotask([last_template],"include")
                             if nanotask_last:
                                 nanotask = nanotask_last
+                                response["info"] = "dummy" #
                                 response["status"] = "last"
                             else:
                                 nanotask = None
                                 response["status"] = "finish"
+                                response["info"] = "dummy" #
                     else:
                         nanotask = None
                         response["status"] = "finish"
                         response["info"] = "dummy"
-                    print(response)
                     return nanotask, response
 
                 if status=="first": 
@@ -227,7 +232,7 @@ def load_nanotask(request, project_name):
 
         # terminating because of some error
         else:
-            ret = JsonResponse({"info": None, "html": None}) 
+            ret = JsonResponse({"info": None, "html": None, "status": None}) 
 
         return ret
 
@@ -334,7 +339,6 @@ def update_assignment_status(request, project_name, status):
     assignment_ids = request_json["ids"]
 
     sql = "UPDATE {0}.nanotask_amtassignment SET status='{1}' WHERE mturk_assignment_id IN ({2});".format(project_name, status, ",".join(["'{}'".format(aid) for aid in assignment_ids]))
-    print(sql)
     with connection.cursor() as cursor:
         cursor.execute(sql)
     return JsonResponse({})

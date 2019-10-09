@@ -1,1 +1,4 @@
-img/
+*
+!html/
+!css/
+!js/

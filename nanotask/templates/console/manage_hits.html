@@ -208,7 +208,7 @@
             "reject": [],
             "block": []
         };
-        var message = "Ignoring instruction / random answer(s)"
+        var message = "Inconsistent or repeated answers / ignoring instruction"
         for(var i in recordIds) {
             sendData["approve"].push({"AssignmentId": assignmentIds[i], "OverrideRejection": true});
             sendData["reject"].push({"AssignmentId": assignmentIds[i], "RequesterFeedback": message});

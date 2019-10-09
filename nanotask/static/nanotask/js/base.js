@@ -127,12 +127,12 @@ var loadNanotask = function() {
 
     var afterNanotaskLoadHandler = function(nanotask){
 
-        if(!nanotask.info)
-            afterNanotaskLoadErrorHandler();
-
-        else if(["__preview__","__maxassignments__","__excluded__"].indexOf(nanotask.info.template_name) > -1){
+        if(nanotask.msg){
             $("#base-nanotask").html(nanotask.html);
         }
+
+        else if(!nanotask.info)
+            afterNanotaskLoadErrorHandler();
 
         else if(nanotask.status=="finish" || submittedNanotasks>nanotasksPerHIT)
             submitHIT();
