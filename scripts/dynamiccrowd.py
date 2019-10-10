@@ -45,16 +45,26 @@ class Context:
                     endpoint_url = endpoint_url
         )
     
-    def save_nanotasks(self, template_name, csv_name, generator, total=0):
+    def save_nanotasks(self, template_name, csv_name, is_test, ticketnum, generator, total=0):
         create_id = secrets.token_hex(8)
         with open("/root/DynamicCrowd/settings/projects/{}.json".format(self.project_name)) as f:
             settings = json.load(f)
+
+        if ticketnum:
+            num_tickets = ticketnum
+        else:
+            num_tickets = settings["DynamicCrowd"]["AnswersPerNanotask"]
+
         with transaction.atomic():
-            for idx, row in tqdm(generator, total=total):
-                nanotask = Nanotask(template_name=template_name, media_data=json.dumps(row), create_id=create_id, instance_id="{}_{}".format(csv_name,idx))
+            for idx, ground_truth, row in tqdm(generator, total=total):
+                nanotask = Nanotask(template_name=template_name,
+                                    media_data=json.dumps(row),
+                                    create_id=create_id,
+                                    instance_id="{}_{}".format(csv_name,idx),
+                                    ground_truth=ground_truth)
                 nanotask.save(using=self.project_name)
                 ticket = Ticket(nanotask=nanotask,instance_id="{}_{}".format(csv_name,idx))
-                tickets = [ticket for i in range(settings["DynamicCrowd"]["AnswersPerNanotask"])]
+                tickets = [ticket for i in range(num_tickets)]
                 Ticket.objects.using(self.project_name).bulk_create(tickets)
 
     def export_answers(self, callback):

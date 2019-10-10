@@ -58,9 +58,14 @@ def load_nanotask(request, project_name):
                                                                ticket__session_tab_id=session_tab_id,
                                                                ticket__time_submitted=None).order_by('id').first();
 
-    def reserve_nanotask(cursor, template_query):
+    def reserve_nanotask(cursor, template_query, is_test=False):
         #sql = "update {1}.nanotask_ticket set mturk_worker_id='{0}', session_tab_id='{2}', user_agent='{3}', time_assigned='{5}' where mturk_worker_id is null and instance_id not in ( select instance_id from ( select distinct a.instance_id from {1}.nanotask_ticket as a inner join {1}.nanotask_nanotask as n on a.nanotask_id=n.id where {4}(a.mturk_worker_id='{0}')) as tmp) order by nanotask_id asc, mturk_worker_id desc limit 1;".format(mturk_worker_id, project_name, session_tab_id, user_agent, template_query, timezone.now())
-        sql = "update {1}.nanotask_ticket set mturk_worker_id='{0}', session_tab_id='{2}', user_agent='{3}', time_assigned='{5}' where mturk_worker_id is null and instance_id not in ( select instance_id from ( select distinct a.instance_id from {1}.nanotask_ticket as a inner join {1}.nanotask_nanotask as n on a.nanotask_id=n.id where {4}(a.mturk_worker_id='{0}')) as tmp) order by rand() limit 1;".format(mturk_worker_id, project_name, session_tab_id, user_agent, template_query, timezone.now())
+        if is_test:
+            test_query = " or n.ground_truth is null"
+        else:
+            test_query = " or n.ground_truth is not null"
+
+        sql = "update {1}.nanotask_ticket set mturk_worker_id='{0}', session_tab_id='{2}', user_agent='{3}', time_assigned='{5}' where mturk_worker_id is null and instance_id not in ( select instance_id from ( select distinct a.instance_id from {1}.nanotask_ticket as a inner join {1}.nanotask_nanotask as n on a.nanotask_id=n.id where ({4}a.mturk_worker_id='{0}'){6}) as tmp) order by rand() limit 1;".format(mturk_worker_id, project_name, session_tab_id, user_agent, template_query, timezone.now(), test_query)
         cursor.execute(sql)
 
     def release_nanotask(cursor,nanotask):
@@ -146,8 +151,13 @@ def load_nanotask(request, project_name):
                 template_query_first = "n.template_name<>'{}' or ".format(first_template)
                 template_query_last = "n.template_name<>'{}' or ".format(last_template)
 
-                def reserve_nanotask_first(response):
-                    reserve_nanotask(cursor, template_query_main)
+                #########
+
+                def reserve_nanotask_first(response, is_test=False):
+                    if is_test:
+                        reserve_nanotask(cursor, template_query_main, True)
+                    else:
+                        reserve_nanotask(cursor, template_query_main)
                     nanotask_main = get_reserved_nanotask([first_template,last_template],"exclude")
                     if first_template:
                         if nanotask_main:
@@ -173,9 +183,12 @@ def load_nanotask(request, project_name):
                         response["status"] = ""
                     return nanotask, response
 
-                def reserve_nanotask_main(response):
-                    reserve_nanotask(cursor, template_query_main)
+                def reserve_nanotask_main(response, is_test=False):
+                    reserve_nanotask(cursor, template_query_main, is_test)
                     nanotask = get_reserved_nanotask([first_template, last_template],"exclude")
+                    if is_test and not nanotask:
+                        reserve_nanotask(cursor, template_query_main)
+                        nanotask = get_reserved_nanotask([first_template, last_template],"exclude")
                     response["status"] = ""
                     return nanotask, response
 
@@ -205,16 +218,42 @@ def load_nanotask(request, project_name):
                         response["info"] = "dummy"
                     return nanotask, response
 
-                if status=="first": 
-                    nanotask, response = reserve_nanotask_first(response)
-                    
-                elif status=="":
-                    nanotask, response = reserve_nanotask_main(response)
-                    if not nanotask:
+                def reserve_nanotask_in_status(response, status, is_test=False):
+                    if status=="first": 
+                        nanotask, response = reserve_nanotask_first(response, is_test)
+                        
+                    elif status=="":
+                        nanotask, response = reserve_nanotask_main(response, is_test)
+                        if not nanotask:
+                            nanotask, response = reserve_nanotask_last(response)
+
+                    elif status=="last":
                         nanotask, response = reserve_nanotask_last(response)
 
-                elif status=="last":
-                    nanotask, response = reserve_nanotask_last(response)
+                    return nanotask, response
+
+
+                #########
+
+                worker = Worker.objects.using(project_name).filter(mturk_worker_id=mturk_worker_id).first()
+
+                if not worker:
+                    worker = Worker(mturk_worker_id=mturk_worker_id,is_qualified=False)
+                    worker.save(using=project_name)
+    
+                if project_settings["DynamicCrowd"]["RequireTest"]:
+                    assignment = AMTAssignment.objects.using(project_name).filter(mturk_worker_id=mturk_worker_id).first()
+                    if assignment:
+                        if worker.is_qualified:
+                            nanotask, response = reserve_nanotask_in_status(response, status)
+                        else:
+                            rettask = None
+                    else:
+                        nanotask, response = reserve_nanotask_in_status(response, status, True)
+                        if not nanotask:
+                            nanotask, response = reserve_nanotask_in_status(response, status)
+                else:
+                    nanotask, response = reserve_nanotask_in_status(response, status)
 
         if "status" in response and response["status"]=="finish":
             ret = JsonResponse(response)
@@ -274,11 +313,48 @@ def update_completed_hit(request):
     mturk_hit_id = request_json["mturk_hit_id"]
     mturk_worker_id = request_json["mturk_worker_id"]
     project_name = request_json["project_name"]
+    project_settings = load_project_settings(project_name)
     amt_assignment = AMTAssignment(mturk_assignment_id = mturk_assignment_id,
                                    mturk_hit_id = mturk_hit_id,
                                    mturk_worker_id = mturk_worker_id)
     amt_assignment.save(using=project_name)
     sql = "UPDATE {0}.nanotask_ticket SET amt_assignment_id='{1}' WHERE nanotask_id IN ({2}) AND mturk_worker_id='{3}';".format(project_name, amt_assignment.id, ",".join(map(str,ids)),  mturk_worker_id)
+
+    if project_settings["DynamicCrowd"]["RequireTest"]:
+        #test_answers = Answer.objects.using(project_name).filter(ticket__mturk_worker_id=mturk_worker_id,
+        #                                                         nanotask__ground_truth__isnull=False).all()
+        sql = "SELECT * FROM {0}.nanotask_answer AS a INNER JOIN {0}.nanotask_ticket as t ON a.ticket_id=t.id INNER JOIN {0}.nanotask_nanotask AS n ON t.nanotask_id=n.id WHERE t.mturk_worker_id='{1}' AND n.ground_truth IS NOT NULL;".format(project_name, mturk_worker_id)
+
+        ### https://docs.djangoproject.com/en/2.0/topics/db/sql/
+        def dictfetchall(cursor):
+            "Return all rows from a cursor as a dict"
+            columns = [col[0] for col in cursor.description]
+            return [
+                dict(zip(columns, row))
+                for row in cursor.fetchall()
+            ]
+
+        with connection.cursor() as cursor:
+            cursor.execute(sql)
+            test_answers = dictfetchall(cursor)
+        cnt_all = 0
+        cnt_correct = 0
+        for ans in test_answers:
+            gt = json.loads(ans["ground_truth"])
+            name = ans["name"]
+            value = ans["value"]
+            print(gt,name,value)
+            if name in gt:
+                cnt_all += 1
+                if gt[name]==value:
+                    cnt_correct += 1
+        test_score = cnt_correct/cnt_all
+        worker = Worker.objects.using(project_name).filter(mturk_worker_id=mturk_worker_id).first()
+        worker.test_score = test_score
+        if test_score >= project_settings["DynamicCrowd"]["TestAccuracyThreshold"]:
+            worker.is_qualified = 1
+        worker.save(using=project_name)
+
     with connection.cursor() as cursor:
         cursor.execute(sql)
     connection.close()
@@ -350,7 +426,7 @@ def update_assignment_comment(request, project_name):
     comment = request_json["comment"]
     assignment = AMTAssignment.objects.using(project_name).filter(id=id).first()
     assignment.comment = comment
-    assignment.save()
+    assignment.save(using=project_name)
     return JsonResponse({})
 
 @csrf_exempt

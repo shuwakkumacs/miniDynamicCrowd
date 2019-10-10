@@ -326,7 +326,7 @@ $("#dev-btn-start-nanotasks").on("click",function(){
     var workerId = $("#dev-worker-id").val();
     if(workerId!="") window.location.href = "./?assignmentId=test&workerId="+workerId;
 });
-$("#dev-btn-reset").on("click", refreshPage);
+$(".dev-btn-reset").on("click", refreshPage);
 
 $(function(){
     if(TEST_MODE) $("#top-dev-bar").show();

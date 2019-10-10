@@ -19,10 +19,17 @@ class HIT(models.Model):
     time_expired = models.DateTimeField(blank=True, null=True)
 
 class Nanotask(models.Model):
+    ground_truth = models.TextField(max_length=255, blank=True, null=True)
     template_name = models.TextField(max_length=255)
     media_data = models.TextField(blank=True, default="{}")
     create_id = models.CharField(max_length=100)
     instance_id = models.CharField(max_length=100)
+    time_created = models.DateTimeField(auto_now_add=True)
+
+class Worker(models.Model):
+    mturk_worker_id = models.CharField(max_length=255, blank=True, null=True)  # allow blank for testing
+    is_qualified = models.IntegerField()
+    test_score = models.FloatField(default=0.0)
     time_created = models.DateTimeField(auto_now_add=True)
 
 class Ticket(models.Model):
