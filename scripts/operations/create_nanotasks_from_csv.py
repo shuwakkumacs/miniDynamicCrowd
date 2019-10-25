@@ -28,4 +28,6 @@ def run(context):
                         media_data[col] = row[i]
                 yield idx, ground_truth, media_data
                 idx += 1
-        context.save_nanotasks(template_name, csv_filename.split(".")[0], is_test, int(ticketnum), generate())
+        if ticketnum:
+            ticketnum = int(ticketnum)
+        context.save_nanotasks(template_name, csv_filename.split(".")[0], is_test, ticketnum, generate())
