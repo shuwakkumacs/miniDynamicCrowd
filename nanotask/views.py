@@ -241,7 +241,7 @@ def load_nanotask(request, project_name):
                     worker = Worker(mturk_worker_id=mturk_worker_id,is_qualified=False)
                     worker.save(using=project_name)
     
-                if project_settings["DynamicCrowd"]["RequireTest"]:
+                if "RequireTest" in project_settings["DynamicCrowd"] and project_settings["DynamicCrowd"]["RequireTest"]:
                     assignment = AMTAssignment.objects.using(project_name).filter(mturk_worker_id=mturk_worker_id).first()
                     if assignment:
                         if worker.is_qualified:
@@ -320,7 +320,7 @@ def update_completed_hit(request):
     amt_assignment.save(using=project_name)
     sql = "UPDATE {0}.nanotask_ticket SET amt_assignment_id='{1}' WHERE nanotask_id IN ({2}) AND mturk_worker_id='{3}';".format(project_name, amt_assignment.id, ",".join(map(str,ids)),  mturk_worker_id)
 
-    if project_settings["DynamicCrowd"]["RequireTest"]:
+    if "RequireTest" in project_settings["DynamicCrowd"] and project_settings["DynamicCrowd"]["RequireTest"]:
         #test_answers = Answer.objects.using(project_name).filter(ticket__mturk_worker_id=mturk_worker_id,
         #                                                         nanotask__ground_truth__isnull=False).all()
         sql = "SELECT * FROM {0}.nanotask_answer AS a INNER JOIN {0}.nanotask_ticket as t ON a.ticket_id=t.id INNER JOIN {0}.nanotask_nanotask AS n ON t.nanotask_id=n.id WHERE t.mturk_worker_id='{1}' AND n.ground_truth IS NOT NULL;".format(project_name, mturk_worker_id)
